@@ -1,10 +1,13 @@
+import { Suspense } from "react"
+
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { Skeleton } from "@/components/ui/skeleton"
 import { AppBreadcrumbs } from "./app-breadcrumbs"
 import { CommandMenu } from "./command-menu"
 import { QuickCreateMenu } from "./quick-create-menu"
 import { ThemeToggle } from "./theme-toggle"
-import { UserMenu } from "./user-menu"
+import { UserMenuServer } from "./user-menu-server"
 
 export function AppHeader() {
   return (
@@ -16,7 +19,10 @@ export function AppHeader() {
         <CommandMenu />
         <QuickCreateMenu />
         <ThemeToggle />
-        <UserMenu />
+        {/* Session read: streams in so the rest of the shell stays in the static shell. */}
+        <Suspense fallback={<Skeleton className="size-8 rounded-full" />}>
+          <UserMenuServer />
+        </Suspense>
       </div>
     </header>
   )

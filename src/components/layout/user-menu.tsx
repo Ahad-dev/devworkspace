@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { LogOut, Settings, User } from "lucide-react"
+import { LogOut, Settings } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -13,27 +13,41 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { signOut } from "@/features/auth/actions"
 
-/**
- * Profile menu. Static placeholder until auth lands (P1.7–P1.8): then it receives the
- * signed-in user from a Suspense-wrapped server component and sign-out is wired up.
- */
-export function UserMenu() {
+function initials(displayName: string | null, email: string | null) {
+  const words = displayName?.trim().split(/\s+/).filter(Boolean) ?? []
+  if (words.length >= 2) return `${words[0]![0]}${words[1]![0]}`.toUpperCase()
+  return (words[0]?.[0] ?? email?.[0] ?? "?").toUpperCase()
+}
+
+/** Profile menu. Receives the verified user from UserMenuServer (inside Suspense). */
+export function UserMenu({
+  email,
+  displayName,
+}: {
+  email: string | null
+  displayName: string | null
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full" aria-label="Account menu">
           <Avatar className="size-7">
-            <AvatarFallback className="text-xs">
-              <User className="size-3.5" />
+            <AvatarFallback className="text-xs font-medium">
+              {initials(displayName, email)}
             </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
+      <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal">
-          <div className="text-sm font-medium">Not signed in</div>
-          <div className="text-xs text-muted-foreground">Sign-in arrives in P1.7</div>
+          <div className="truncate text-sm font-medium">
+            {displayName ?? email ?? "Unknown account"}
+          </div>
+          {displayName && email ? (
+            <div className="truncate text-xs text-muted-foreground">{email}</div>
+          ) : null}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
@@ -42,10 +56,14 @@ export function UserMenu() {
             Settings
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem disabled>
-          <LogOut />
-          Sign out
-        </DropdownMenuItem>
+        <form action={signOut}>
+          <DropdownMenuItem asChild>
+            <button type="submit" className="w-full">
+              <LogOut />
+              Sign out
+            </button>
+          </DropdownMenuItem>
+        </form>
       </DropdownMenuContent>
     </DropdownMenu>
   )
