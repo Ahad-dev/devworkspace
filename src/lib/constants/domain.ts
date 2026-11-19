@@ -1,4 +1,5 @@
 import {
+  Archive,
   ArrowDown,
   ArrowUp,
   ChevronsUp,
@@ -6,9 +7,12 @@ import {
   CircleCheck,
   CircleDashed,
   CircleDot,
+  CirclePause,
+  CirclePlay,
   CircleSlash,
   Equal,
   Eye,
+  Wrench,
   type LucideIcon,
 } from "lucide-react"
 
@@ -137,4 +141,122 @@ export const ENVIRONMENT_TYPE_META: Record<
     short: "CUSTOM",
     className: "text-env-custom bg-env-custom/10 ring-env-custom/25",
   },
+}
+
+/* ------------------------------------------------------------------ */
+/* Projects, repositories, technologies (Spec FR-03/04/05; M03–M05)    */
+/* ------------------------------------------------------------------ */
+
+export const PROJECT_TYPES = ["client", "internal", "personal", "open_source", "learning"] as const
+export type ProjectType = (typeof PROJECT_TYPES)[number]
+
+export const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {
+  client: "Client",
+  internal: "Internal",
+  personal: "Personal",
+  open_source: "Open source",
+  learning: "Learning",
+}
+
+export const PROJECT_STATUSES = [
+  "active",
+  "on_hold",
+  "maintenance",
+  "completed",
+  "archived",
+] as const
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number]
+/** Statuses a user picks in forms; "archived" is set by the Archive action. */
+export const EDITABLE_PROJECT_STATUSES = PROJECT_STATUSES.filter(
+  (s): s is Exclude<ProjectStatus, "archived"> => s !== "archived",
+)
+
+export const PROJECT_STATUS_META: Record<ProjectStatus, Meta> = {
+  active: {
+    label: "Active",
+    icon: CirclePlay,
+    className: "text-status-done bg-status-done/10 ring-status-done/25",
+  },
+  on_hold: {
+    label: "On hold",
+    icon: CirclePause,
+    className: "text-status-in-progress bg-status-in-progress/10 ring-status-in-progress/30",
+  },
+  maintenance: {
+    label: "Maintenance",
+    icon: Wrench,
+    className: "text-status-ready bg-status-ready/10 ring-status-ready/25",
+  },
+  completed: {
+    label: "Completed",
+    icon: CircleCheck,
+    className: "text-status-inbox bg-status-inbox/10 ring-status-inbox/25",
+  },
+  archived: {
+    label: "Archived",
+    icon: Archive,
+    className: "text-muted-foreground bg-muted ring-border",
+  },
+}
+
+export const REPOSITORY_PROVIDERS = [
+  "github",
+  "bitbucket",
+  "gitlab",
+  "azure_devops",
+  "self_hosted",
+  "other",
+] as const
+export type RepositoryProvider = (typeof REPOSITORY_PROVIDERS)[number]
+export const REPOSITORY_PROVIDER_LABELS: Record<RepositoryProvider, string> = {
+  github: "GitHub",
+  bitbucket: "Bitbucket",
+  gitlab: "GitLab",
+  azure_devops: "Azure DevOps",
+  self_hosted: "Self-hosted",
+  other: "Other",
+}
+
+export const REPOSITORY_PURPOSES = [
+  "frontend",
+  "backend",
+  "mobile",
+  "infrastructure",
+  "docs",
+  "monorepo",
+  "other",
+] as const
+export type RepositoryPurpose = (typeof REPOSITORY_PURPOSES)[number]
+export const REPOSITORY_PURPOSE_LABELS: Record<RepositoryPurpose, string> = {
+  frontend: "Frontend",
+  backend: "Backend",
+  mobile: "Mobile",
+  infrastructure: "Infrastructure",
+  docs: "Docs",
+  monorepo: "Monorepo",
+  other: "Other",
+}
+
+export const TECHNOLOGY_CATEGORIES = [
+  "frontend",
+  "backend",
+  "database",
+  "mobile",
+  "infrastructure",
+  "styling",
+  "testing",
+  "tooling",
+  "other",
+] as const
+export type TechnologyCategory = (typeof TECHNOLOGY_CATEGORIES)[number]
+export const TECHNOLOGY_CATEGORY_LABELS: Record<TechnologyCategory, string> = {
+  frontend: "Frontend",
+  backend: "Backend",
+  database: "Database",
+  mobile: "Mobile",
+  infrastructure: "Infrastructure / hosting",
+  styling: "Styling / UI",
+  testing: "Testing",
+  tooling: "Build / tooling",
+  other: "Other",
 }

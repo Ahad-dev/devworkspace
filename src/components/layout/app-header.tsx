@@ -14,7 +14,10 @@ export function AppHeader() {
     <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b bg-background/85 px-4 backdrop-blur-sm">
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-4" />
-      <AppBreadcrumbs />
+      {/* Reads the URL: runtime data on dynamic routes. */}
+      <Suspense fallback={null}>
+        <AppBreadcrumbs />
+      </Suspense>
       <div className="ml-auto flex items-center gap-2">
         <CommandMenu />
         <QuickCreateMenu />
