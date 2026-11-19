@@ -32,7 +32,9 @@ shadcn/ui (Radix) · Zod · Supabase (Auth, Postgres + RLS, Storage) · pnpm
    cp .env.example .env.local
    ```
 
-3. Link the Supabase CLI to the dev project (asks for your access token and database password):
+3. Link the Supabase CLI to the dev project. Log in with a personal access token scoped to the project
+   with Database + Migrations Read-write, then link. Put the database password (letters and digits only)
+   in a gitignored `.env.supabase.local` as `SUPABASE_DB_PASSWORD=...`; the `db:*` scripts read it:
 
    ```bash
    pnpm supabase login

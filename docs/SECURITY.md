@@ -32,12 +32,13 @@ How this is enforced:
 
 ## 3. Keys and environment variables
 
-| Variable                               | Exposure                      | Where                                                                                          |
-| -------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`             | Public                        | `.env.local`, Vercel                                                                           |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public (RLS protects data)    | `.env.local`, Vercel                                                                           |
-| `NEXT_PUBLIC_SITE_URL`                 | Public                        | `.env.local`, Vercel                                                                           |
-| `SUPABASE_SECRET_KEY`                  | **Server-only**, bypasses RLS | `.env.test.local` (dev project, tests only); production only if a server-only feature needs it |
+| Variable                               | Exposure                                                   | Where                                                                                                   |
+| -------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Public                                                     | `.env.local`, Vercel                                                                                    |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public (RLS protects data)                                 | `.env.local`, Vercel                                                                                    |
+| `NEXT_PUBLIC_SITE_URL`                 | Public                                                     | `.env.local`, Vercel                                                                                    |
+| `SUPABASE_SECRET_KEY`                  | **Server-only**, bypasses RLS                              | `.env.test.local` (dev project, tests only); production only if a server-only feature needs it          |
+| `SUPABASE_DB_PASSWORD`                 | **Local only**, dev database password for the Supabase CLI | `.env.supabase.local` (gitignored), read only by `scripts/supabase.mjs`; never in chat, commits or logs |
 
 - The secret key is only imported from `server-only` modules. It never gets a `NEXT_PUBLIC_` prefix.
   `src/lib/env.ts` refuses a `sb_secret_` value in the public key slot.
