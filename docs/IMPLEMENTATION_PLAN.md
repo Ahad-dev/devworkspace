@@ -3,7 +3,7 @@
 **Source of truth:** `docs/DevWorkspace_Full_Product_and_Implementation_Specification.md` (the "Spec").
 The Spec says _what_. This plan says _how and in what order_. If they conflict, the Spec wins unless
 the Decision Log below records an override.
-**Created:** 2026-11-19 · **Status:** Phase 2 built (P2.1–P2.11 done). Checkpoint P2 is ready for the owner to register real projects. Next: Phase 3.
+**Created:** 2026-11-19 · **Status:** Phases 1–2 complete (checkpoints passed 2026-11-19). Next: Phase 3 (native task management), starting at P3.1.
 
 ## 0. How this plan is used
 
@@ -168,7 +168,7 @@ completes; integration tests prove user B and anon cannot read A's profile; CI i
       across projects fails; the archive invariant holds; cascade delete removes children; activity rows are written. Unit: schemas, URL/credential checks,
       secret-guard. E2E: create a project, add 2 repos, add technologies, archive, restore.
 
-**Checkpoint P2:** all real active projects, repositories and stacks can be registered (Spec Phase 2 deliverable).
+**Checkpoint P2 (Passed 2026-11-19):** all real active projects, repositories and stacks can be registered (Spec Phase 2 deliverable).
 
 ### Phase 3 — Native task management (FR-06, FR-13)
 
@@ -386,3 +386,4 @@ Tests are added. No secrets appear in logs, URLs or browser state. `database.typ
 | 2026-11-19 | Checkpoint P1     | Passed. Owner sign-in works locally and on Vercel; logged-out access redirects; **password-reset email flow completes** (owner tested on the deployment after adding its URL to the Supabase redirect allow-list); integration tests prove other users and anon can't read a profile; CI green on `3b66e5d`.                                                                                                                                                                                                                                                                                                                                                           |
 | 2026-11-19 | P2.1–P2.5         | Migrations `activity`, `projects`, `repositories`, `project_technologies` (+ `project_summaries` view) applied to dev (4th attempt). Integration: 38/38 (27 new Phase 2 cases).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | 2026-11-19 | P2.6–P2.11        | UI: `/projects` (URL-driven search, type/status filters, sort, Active/Archived, responsive table), create dialog (also in header quick-create), project workspace with tabs, Overview (details, inline technology editor, repos, recent activity), Repositories tab (add/edit/remove dialogs, safe external links), Activity tab (paginated), Edit page, archive/restore/delete with child-count confirmation. Tests: unit 79/79 (secret-guard, schemas, format), integration 38/38, e2e 6/6 (project lifecycle). Reviewed screenshots in light, dark and mobile; fixed placeholder escaping, mobile detail order, select widths and table columns.                    |
+| 2026-11-19 | Checkpoint P2     | Passed. Commit `3c26817` is live on Vercel (CI run 44592179609 green). The owner registered real projects, repositories and stacks on the deployment with no issues.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
