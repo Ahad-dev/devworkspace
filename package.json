@@ -9,7 +9,11 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "supabase": "node scripts/supabase.mjs",
+    "db:new": "node scripts/supabase.mjs migration new",
+    "db:push": "node scripts/supabase.mjs db push",
+    "db:types": "node scripts/supabase.mjs --types-out src/types/database.types.ts gen types typescript --linked --schema public"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

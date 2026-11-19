@@ -15,6 +15,7 @@ shadcn/ui (Radix) · Zod · Supabase (Auth, Postgres + RLS, Storage) · pnpm
 ## Prerequisites
 
 - Node.js 24 and pnpm 10
+- Supabase CLI 3.x (see [Supabase CLI](#supabase-cli))
 - Access to the hosted Supabase dev project (`devworkspace-dev`)
 
 ## Setup
@@ -34,8 +35,8 @@ shadcn/ui (Radix) · Zod · Supabase (Auth, Postgres + RLS, Storage) · pnpm
 3. Link the Supabase CLI to the dev project (asks for your access token and database password):
 
    ```bash
-   pnpm exec supabase login
-   pnpm exec supabase link --project-ref <project-ref>
+   pnpm supabase login
+   pnpm supabase link --project-ref <project-ref>
    ```
 
 4. Apply migrations and regenerate types:
@@ -66,7 +67,18 @@ Authentication → Users → Add user.
 | `pnpm db:new <name>`                | New SQL migration in `supabase/migrations/`        |
 | `pnpm db:push`                      | Apply pending migrations to the **linked** project |
 | `pnpm db:types`                     | Regenerate `src/types/database.types.ts`           |
+| `pnpm supabase <args>`              | Any Supabase CLI command                           |
 
-The `db:*` scripts are added together with the Supabase CLI (Plan P1.4).
+## Supabase CLI
+
+The scripts run the CLI through `scripts/supabase.mjs`, which uses the first one it finds:
+
+1. `$SUPABASE_BIN`
+2. `.tools/supabase-cli/supabase(.exe)`: a standalone binary (gitignored)
+3. `supabase` on PATH, including a `supabase` devDependency if one is installed
+
+On a fast connection, `pnpm add -D supabase` is the simplest option. On a slow one, download the official
+binary for your platform (the npm package `@supabase/cli-<platform>` or a GitHub release of
+`supabase/cli`), check its SHA-512, and put the executable at `.tools/supabase-cli/`.
 
 Database changes only happen through migration files. Never edit an applied migration; add a new one.

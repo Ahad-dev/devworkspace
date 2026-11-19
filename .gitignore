@@ -40,3 +40,6 @@ yarn-error.log*
 Thumbs.db
 .vercel
 *.pem
+
+# standalone tools (e.g. Supabase CLI binary)
+.tools/
