@@ -33,11 +33,15 @@ Supabase (hosted dev project; Auth, Postgres + RLS, Storage), Vitest, Playwright
 
 Filled in as scripts are added (see `package.json`).
 
-| Command                                       | Purpose                             |
-| --------------------------------------------- | ----------------------------------- |
-| `pnpm dev`                                    | Dev server on http://localhost:3000 |
-| `pnpm lint` / `pnpm typecheck` / `pnpm build` | Checks run by CI                    |
-| `pnpm format` / `pnpm format:check`           | Prettier write / check              |
+| Command                                                 | Purpose                                                                                                   |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                              | Dev server on http://localhost:3000                                                                       |
+| `pnpm lint` / `pnpm typecheck` / `pnpm build`           | Checks run by CI                                                                                          |
+| `pnpm format` / `pnpm format:check`                     | Prettier write / check                                                                                    |
+| `pnpm test`                                             | Unit tests (CI)                                                                                           |
+| `pnpm test:int`                                         | Integration tests against the dev project (needs `.env.test.local`)                                       |
+| `pnpm test:e2e`                                         | Playwright e2e in local Chrome (needs `.env.test.local`)                                                  |
+| `pnpm db:new <name>` / `pnpm db:push` / `pnpm db:types` | Migrations and generated types (`db:push` targets the linked dev project; pass `--yes` non-interactively) |
 
 ## Git
 

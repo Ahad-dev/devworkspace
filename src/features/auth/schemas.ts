@@ -1,6 +1,13 @@
 import { z } from "zod"
 
-const email = z.email("Enter a valid email address").trim().toLowerCase().max(320)
+// Normalize first, then validate: in Zod 4, z.email() checks the format before any later
+// .trim() runs, so "  me@x.com " would be rejected instead of cleaned.
+const email = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .max(320, "Use at most 320 characters")
+  .pipe(z.email("Enter a valid email address"))
 
 export const signInSchema = z.object({
   email,

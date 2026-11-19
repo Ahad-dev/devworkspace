@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   checks:
-    name: Format, lint, typecheck, build
+    name: Format, lint, typecheck, unit tests, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -38,7 +38,8 @@ jobs:
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
+      - run: pnpm test
       - run: pnpm build
 
-  # Unit tests join `checks` in P1.10. Integration and e2e jobs against the dev
-  # Supabase project run only once repo secrets exist (Plan U6).
+  # Integration and e2e tests need the dev project's secret key, so they run locally
+  # (pnpm test:int, pnpm test:e2e) until repo secrets are added (Plan U6).

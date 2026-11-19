@@ -71,6 +71,19 @@ Authentication → Users → Add user.
 | `pnpm db:types`                     | Regenerate `src/types/database.types.ts`           |
 | `pnpm supabase <args>`              | Any Supabase CLI command                           |
 
+## Testing
+
+| Command         | What it runs                                                                |
+| --------------- | --------------------------------------------------------------------------- |
+| `pnpm test`     | Unit tests (no network)                                                     |
+| `pnpm test:int` | Integration tests: RLS and constraints against the **dev** Supabase project |
+| `pnpm test:e2e` | Playwright browser tests (starts `pnpm dev` if it isn't running)            |
+
+Integration and e2e tests create throwaway users and delete them afterwards. They need a gitignored
+`.env.test.local` with `SUPABASE_TEST_PROJECT_REF` and the dev project's `SUPABASE_SECRET_KEY` (sb_secret_…).
+They refuse to run if `NEXT_PUBLIC_SUPABASE_URL` points at any other project. Locally, e2e uses your installed
+Chrome (`PW_CHANNEL=msedge` for Edge); CI uses Playwright's Chromium.
+
 ## Supabase CLI
 
 The scripts run the CLI through `scripts/supabase.mjs`, which uses the first one it finds:

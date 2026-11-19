@@ -10,6 +10,10 @@
     "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test": "vitest run --project unit",
+    "test:watch": "vitest --project unit",
+    "test:int": "vitest run --project integration",
+    "test:e2e": "playwright test",
     "supabase": "node scripts/supabase.mjs",
     "db:new": "node scripts/supabase.mjs migration new",
     "db:push": "node scripts/supabase.mjs db push --remote",
@@ -36,6 +40,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.1",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -45,7 +50,8 @@
     "prettier": "^3.10.1",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "4.3.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "5.1.1"
   },
   "packageManager": "pnpm@10.33.0"
 }
