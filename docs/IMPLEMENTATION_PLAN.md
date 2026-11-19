@@ -1,9 +1,9 @@
 # DevWorkspace — Working Implementation Plan
 
 **Source of truth:** `docs/DevWorkspace_Full_Product_and_Implementation_Specification.md` (the "Spec").
-The Spec says *what*. This plan says *how and in what order*. If they conflict, the Spec wins unless
+The Spec says _what_. This plan says _how and in what order_. If they conflict, the Spec wins unless
 the Decision Log below records an override.
-**Created:** 2026-11-19 · **Status:** Phase 1 in progress
+**Created:** 2026-11-19 · **Status:** Phase 1 in progress. P1.1–P1.3 done; next is P1.4, which is blocked on U1–U3.
 
 ## 0. How this plan is used
 
@@ -16,20 +16,20 @@ the Decision Log below records an override.
 
 ## 1. Locked stack & versions (checked on npm 2026-11-19; pin exact versions at install)
 
-| Concern | Choice |
-|---|---|
-| Framework | next 16.4.6 (App Router, `src/`, Turbopack), react 19.3.1, TypeScript strict + `noUncheckedIndexedAccess` |
-| UI | tailwindcss 4.3.5, shadcn 4.23.0 (Radix), next-themes (light/dark), lucide-react, sonner toasts |
-| Forms/validation | react-hook-form 7.92.0, zod 4.6.7, @hookform/resolvers (latest compatible with zod 4) |
-| Data | @supabase/supabase-js 2.119.2, @supabase/ssr 0.12.7; @tanstack/react-query 5.108.0 **only** where client caching helps (board, command palette) |
-| Supabase CLI | `supabase` 3.2.0 as a devDependency, run via `pnpm exec supabase` |
-| Board DnD | @dnd-kit/core 6.3.1 (+ sortable, keyboard sensor) |
-| Markdown | react-markdown + remark-gfm + rehype-sanitize (no raw HTML, no rehype-raw) |
-| Dates | date-fns + @date-fns/tz (UTC stored, profile timezone displayed) |
-| Tests | vitest 5.1.1 (unit + integration projects), @playwright/test 1.65.1 (+ @axe-core/playwright) |
-| Lint/format | ESLint (Next config), Prettier + prettier-plugin-tailwindcss |
-| CI | GitHub Actions on the private repo `devworkspace` |
-| Hosting (Phase 8) | Vercel, linked to the GitHub repo |
+| Concern           | Choice                                                                                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework         | next 16.4.6 (App Router, `src/`, Turbopack), react 19.3.1, TypeScript strict + `noUncheckedIndexedAccess`                                       |
+| UI                | tailwindcss 4.3.5, shadcn 4.23.0 (Radix), next-themes (light/dark), lucide-react, sonner toasts                                                 |
+| Forms/validation  | react-hook-form 7.92.0, zod 4.6.7, @hookform/resolvers (latest compatible with zod 4)                                                           |
+| Data              | @supabase/supabase-js 2.119.2, @supabase/ssr 0.12.7; @tanstack/react-query 5.108.0 **only** where client caching helps (board, command palette) |
+| Supabase CLI      | `supabase` 3.2.0 as a devDependency, run via `pnpm exec supabase`                                                                               |
+| Board DnD         | @dnd-kit/core 6.3.1 (+ sortable, keyboard sensor)                                                                                               |
+| Markdown          | react-markdown + remark-gfm + rehype-sanitize (no raw HTML, no rehype-raw)                                                                      |
+| Dates             | date-fns + @date-fns/tz (UTC stored, profile timezone displayed)                                                                                |
+| Tests             | vitest 5.1.1 (unit + integration projects), @playwright/test 1.65.1 (+ @axe-core/playwright)                                                    |
+| Lint/format       | ESLint (Next config), Prettier + prettier-plugin-tailwindcss                                                                                    |
+| CI                | GitHub Actions on the private repo `devworkspace`                                                                                               |
+| Hosting (Phase 8) | Vercel, linked to the GitHub repo                                                                                                               |
 
 Verify at implementation time, because these APIs drift. Next 16 renamed `middleware.ts` to **`proxy.ts`**. Supabase SSR
 guidance may prefer `auth.getClaims()` over `getUser()` for server checks. Supabase keys are publishable/secret
@@ -37,13 +37,14 @@ guidance may prefer `auth.getClaims()` over `getUser()` for server checks. Supab
 
 ## 2. Environment model (user decision: hosted dev backend)
 
-| DevWorkspace env | Frontend | Backend |
-|---|---|---|
-| Local dev | `pnpm dev` on localhost:3000 | **Hosted Supabase project `devworkspace-dev`** |
-| Preview | Vercel preview (Phase 8) | `devworkspace-dev` |
-| Production | Vercel production (Phase 8) | Separate hosted project `devworkspace-prod` |
+| DevWorkspace env | Frontend                     | Backend                                        |
+| ---------------- | ---------------------------- | ---------------------------------------------- |
+| Local dev        | `pnpm dev` on localhost:3000 | **Hosted Supabase project `devworkspace-dev`** |
+| Preview          | Vercel preview (Phase 8)     | `devworkspace-dev`                             |
+| Production       | Vercel production (Phase 8)  | Separate hosted project `devworkspace-prod`    |
 
 Consequences (they replace the Spec's local-Docker steps in §10.2):
+
 - Migrations are written in `supabase/migrations/` and applied with `pnpm db:push`, which wraps `supabase db push` to the linked dev project.
 - No `supabase start`. `supabase db reset --linked` wipes the dev DB, so I run it only with the user's explicit OK, and never against prod.
 - Types: `pnpm db:types` → `supabase gen types typescript --linked > src/types/database.types.ts`, run after every migration.
@@ -55,15 +56,15 @@ Consequences (they replace the Spec's local-Docker steps in §10.2):
 
 ## 3. User actions (U)
 
-| ID | When | Action |
-|---|---|---|
-| U1 | P1.4 | Create the Supabase project `devworkspace-dev` (pick a nearby region) and store its DB password in your password manager. |
-| U2 | P1.4 | Send me the Project URL and **publishable** key (they are public values), or paste them into `.env.local` yourself. |
-| U3 | P1.4 | In your own terminal, run `pnpm exec supabase login` and then `pnpm exec supabase link --project-ref <ref>` (they need your token and DB password). |
-| U4 | P1.6 | Dashboard → Auth: turn **off** public sign-ups, set Site URL `http://localhost:3000`, add the redirect URL `http://localhost:3000/auth/confirm`, then Users → Add user (your owner account with your own password). |
-| U5 | P1.10 | Paste the dev project's **secret** key into `.env.test.local` as `SUPABASE_SECRET_KEY`. Dev project only; never commit it. |
-| U6 | P1.11 (optional) | Add GitHub repo secrets so CI can run integration/e2e tests against dev. |
-| U7 | Phase 8 | Create `devworkspace-prod`, a Vercel account/project, a domain and custom SMTP. Set the production env vars in Vercel. |
+| ID  | When             | Action                                                                                                                                                                                                              |
+| --- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| U1  | P1.4             | Create the Supabase project `devworkspace-dev` (pick a nearby region) and store its DB password in your password manager.                                                                                           |
+| U2  | P1.4             | Send me the Project URL and **publishable** key (they are public values), or paste them into `.env.local` yourself.                                                                                                 |
+| U3  | P1.4             | In your own terminal, run `pnpm exec supabase login` and then `pnpm exec supabase link --project-ref <ref>` (they need your token and DB password).                                                                 |
+| U4  | P1.6             | Dashboard → Auth: turn **off** public sign-ups, set Site URL `http://localhost:3000`, add the redirect URL `http://localhost:3000/auth/confirm`, then Users → Add user (your owner account with your own password). |
+| U5  | P1.10            | Paste the dev project's **secret** key into `.env.test.local` as `SUPABASE_SECRET_KEY`. Dev project only; never commit it.                                                                                          |
+| U6  | P1.11 (optional) | Add GitHub repo secrets so CI can run integration/e2e tests against dev.                                                                                                                                            |
+| U7  | Phase 8          | Create `devworkspace-prod`, a Vercel account/project, a domain and custom SMTP. Set the production env vars in Vercel.                                                                                              |
 
 ## 4. Repository layout (Spec §11, with these deviations)
 
@@ -77,6 +78,7 @@ Consequences (they replace the Spec's local-Docker steps in §10.2):
 ## 5. Cross-cutting conventions (decide once, apply everywhere)
 
 **Schema**
+
 - Every user-owned table has `id uuid pk default gen_random_uuid()`, `owner_id uuid not null default auth.uid() references profiles(id) on delete cascade`,
   `created_at`/`updated_at timestamptz default now()`, and the shared `set_updated_at()` trigger.
 - Use Postgres **enums** for fixed lists (statuses, priorities, types, categories), so generated TS types are unions. Add values with `alter type … add value`.
@@ -90,6 +92,7 @@ Consequences (they replace the Spec's local-Docker steps in §10.2):
 - Text limits: titles 1–300 chars, long text up to 100k. URL columns get a check `^https?://` plus a **no-credentials check** (`!~ '://[^/@]+:[^/@]+@'`).
 
 **Security**
+
 - RLS on every table, with separate select/insert/update/delete policies `to authenticated` using `(select auth.uid()) = owner_id`
   (with check on insert/update). Revoke table privileges from `anon`.
 - Views are created `with (security_invoker = true)`, because a plain view bypasses RLS.
@@ -101,10 +104,15 @@ Consequences (they replace the Spec's local-Docker steps in §10.2):
 - The secret key is imported only from `server-only` modules (account deletion, test helpers) and is never bundled to the browser.
 
 **App code**
+
 - Reads go through Server Components calling `features/*/queries` (server-only, select only needed columns).
 - Writes go through Server Actions in `features/*/actions`. Each action runs a Zod parse, checks the user, runs the Supabase call or RPC, then `revalidatePath`, and
   returns `ActionResult<T> = {ok:true,data} | {ok:false,error,fieldErrors?}`. The same Zod schema drives the RHF form.
 - Filters live in URL search params, which makes them server-rendered, shareable and clearable.
+- **Cache Components is on** (Next 16.4 default, with `partialPrefetching`). Anything that reads the session or cookies (the Supabase server
+  client, the current user, user data) must render inside a `<Suspense>` boundary. Layouts must never `await` the session at the top level;
+  push the dynamic read into a child component. Don't put user data in plain `use cache` (it can't read cookies, and RLS needs the user's JWT).
+  Read `node_modules/next/dist/docs/` before relying on remembered Next.js APIs: `error.tsx` gets `retry`, and `proxy.ts` replaces `middleware.ts`.
 - **Activity** is written by DB triggers that call `private.record_activity(...)`, so it is atomic and can't be forgotten. Metadata is limited to
   ids, names and old/new enum values, never free text that could hold secrets. Summaries are rendered from `src/features/activity/registry.ts`.
 - UI follows the Spec's rules: tables/lists over cards, status/priority/env-type tokens defined in `src/lib/constants` with light and dark values,
@@ -114,10 +122,10 @@ Consequences (they replace the Spec's local-Docker steps in §10.2):
 
 ### Phase 1 — Foundation, auth, shell (FR-01; Spec §10, §12-P1)
 
-- [ ] **P1.1 Repo bootstrap.** git init, docs/, this plan, CLAUDE.md, .gitignore, private GitHub repo `devworkspace`.
-- [ ] **P1.2 Scaffold.** `pnpm create next-app@16.4.6` (TS, Tailwind, ESLint, App Router, `src/`, `@/*`). If it refuses the non-empty folder, scaffold
+- [x] **P1.1 Repo bootstrap.** git init, docs/, this plan, CLAUDE.md, .gitignore, private GitHub repo `devworkspace`.
+- [x] **P1.2 Scaffold.** `pnpm create next-app@16.4.6` (TS, Tailwind, ESLint, App Router, `src/`, `@/*`). If it refuses the non-empty folder, scaffold
       in a temp dir and move the files in. Enable strict TS, add Prettier, and add scripts: `dev build start lint typecheck format test test:int test:e2e db:new db:push db:types`.
-- [ ] **P1.3 UI foundation.** `shadcn init` and core components (button, input, textarea, label, select, checkbox, dialog, alert-dialog, sheet,
+- [x] **P1.3 UI foundation.** `shadcn init` and core components (button, input, textarea, label, select, checkbox, dialog, alert-dialog, sheet,
       dropdown-menu, popover, command, tabs, table, badge, tooltip, skeleton, separator, breadcrumb, sidebar, avatar, calendar, form, sonner).
       Add next-themes, the status/priority/env tokens, and a temporary static shell so the layout can be reviewed.
 - [ ] **P1.4 Supabase wiring.** (U1–U3) `pnpm add -D supabase@3.2.0`, `supabase init`, link. Write `.env.example`
@@ -288,17 +296,17 @@ completes; integration tests prove user B and anon cannot read A's profile; CI i
 
 ## 7. Test coverage map (Spec §13 → where it is covered)
 
-| Spec test | Step |
-|---|---|
-| Migrations apply cleanly | Every `db:push`; P8.2 rebuilds the dev DB from zero (with user OK) |
-| Owner allowed / second user denied | P1.10, every phase's tests, P8.2 table-driven |
-| Child-ID cross-owner access | P2.11, P3.12, P5.9 |
-| Repo ∈ project; env/service ∈ project | P2.11, P3.12, P5.9 |
-| Dependency cycles | P3.12 |
-| One active session; segments; atomic completion | P4.8 |
-| Activity has no secrets | P3.12, P5.9 |
-| Private, owner-scoped storage | P6.7 |
-| E2E journeys 1–12 (Spec §13.3) | P2.11 (1–2), P3.12 (3), P4.8 (4–5), P5.9 (6–8), P6.7 (9–10), P7.8 (11), P8.2 (12) |
+| Spec test                                       | Step                                                                              |
+| ----------------------------------------------- | --------------------------------------------------------------------------------- |
+| Migrations apply cleanly                        | Every `db:push`; P8.2 rebuilds the dev DB from zero (with user OK)                |
+| Owner allowed / second user denied              | P1.10, every phase's tests, P8.2 table-driven                                     |
+| Child-ID cross-owner access                     | P2.11, P3.12, P5.9                                                                |
+| Repo ∈ project; env/service ∈ project           | P2.11, P3.12, P5.9                                                                |
+| Dependency cycles                               | P3.12                                                                             |
+| One active session; segments; atomic completion | P4.8                                                                              |
+| Activity has no secrets                         | P3.12, P5.9                                                                       |
+| Private, owner-scoped storage                   | P6.7                                                                              |
+| E2E journeys 1–12 (Spec §13.3)                  | P2.11 (1–2), P3.12 (3), P4.8 (4–5), P5.9 (6–8), P6.7 (9–10), P7.8 (11), P8.2 (12) |
 
 ## 8. Definition of Done (per step; Spec §19)
 
@@ -317,16 +325,22 @@ Tests are added. No secrets appear in logs, URLs or browser state. `database.typ
 
 ## 10. Decision log
 
-| Date | Decision | Why |
-|---|---|---|
-| 2026-11-19 | Hosted Supabase dev project instead of a local Docker stack | User choice; Docker not running. Tests use ephemeral users on dev. |
-| 2026-11-19 | pnpm; repo root = DevWorkspace folder; spec moved to docs/ | User choice |
-| 2026-11-19 | Private GitHub repo `devworkspace` + GitHub Actions from Phase 1 | User choice |
-| 2026-11-19 | Composite FKs for same-owner/same-project integrity; activity via DB triggers | Atomic and DB-enforced (Spec §8.2, §7.5) |
-| 2026-11-19 | `service_instances.project_id` and `task_dependencies.project_id` added beyond the Spec | Needed to enforce the Spec's same-project rule in the DB |
+| Date       | Decision                                                                                                                                                                                           | Why                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| 2026-11-19 | Hosted Supabase dev project instead of a local Docker stack                                                                                                                                        | User choice; Docker not running. Tests use ephemeral users on dev.                                |
+| 2026-11-19 | pnpm; repo root = DevWorkspace folder; spec moved to docs/                                                                                                                                         | User choice                                                                                       |
+| 2026-11-19 | Private GitHub repo `devworkspace` + GitHub Actions from Phase 1                                                                                                                                   | User choice                                                                                       |
+| 2026-11-19 | Composite FKs for same-owner/same-project integrity; activity via DB triggers                                                                                                                      | Atomic and DB-enforced (Spec §8.2, §7.5)                                                          |
+| 2026-11-19 | `service_instances.project_id` and `task_dependencies.project_id` added beyond the Spec                                                                                                            | Needed to enforce the Spec's same-project rule in the DB                                          |
+| 2026-11-19 | Keep Next 16.4 defaults `cacheComponents` + `partialPrefetching`                                                                                                                                   | Scaffold default; both become always-on in the next major. Session reads go behind Suspense (§5). |
+| 2026-11-19 | shadcn 4.23 with the Radix base and Nova preset (Geist, Lucide). Components import `cn` from the official `cn` package (shadcn-ui/cn). `form` is replaced by `field` + `empty`/`kbd`/`input-group` | Current shadcn defaults                                                                           |
+| 2026-11-19 | Neutral palette, no brand accent; colour is reserved for semantic, status, priority and environment tokens, always paired with an icon or label                                                    | Spec §3.3 restrained colour                                                                       |
+| 2026-11-19 | GitHub remote uses HTTPS. Push with `git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push`, because no SSH key is set up and global git config is left unchanged          | Environment                                                                                       |
 
 ## 11. Progress log
 
-| Date | Step(s) | Notes |
-|---|---|---|
-| | | |
+| Date       | Step(s) | Notes                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-19 | P1.1    | Repo initialized; spec moved to docs/; private repo Ahad-dev/devworkspace created and pushed.                                                                                                                                                                                                                                                                                                        |
+| 2026-11-19 | P1.2    | Next 16.4.6 scaffold (React 19.3, Tailwind 4.3, TS 5.9) with strict TS + `noUncheckedIndexedAccess`, Prettier, scripts dev/build/lint/typecheck/format. Test and db scripts get added with their tools (P1.4, P1.10).                                                                                                                                                                                |
+| 2026-11-19 | P1.3    | shadcn components, next-themes, domain tokens (`src/lib/constants/domain.ts`, `domain-badges.tsx`), static shell with sidebar, breadcrumbs, Ctrl/Cmd+K menu, quick-create (disabled until each phase), theme toggle and placeholder user menu. Placeholder pages for all nav areas; `/` redirects to `/dashboard`. Lint, typecheck and build pass; checked in the browser in light, dark and mobile. |

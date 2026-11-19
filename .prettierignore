@@ -1,0 +1,8 @@
+.next
+node_modules
+pnpm-lock.yaml
+coverage
+playwright-report
+test-results
+src/types/database.types.ts
+docs/DevWorkspace_Full_Product_and_Implementation_Specification.md
