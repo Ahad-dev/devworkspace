@@ -32,13 +32,13 @@ How this is enforced:
 
 ## 3. Keys and environment variables
 
-| Variable                               | Exposure                                                   | Where                                                                                                   |
-| -------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`             | Public                                                     | `.env.local`, Vercel                                                                                    |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public (RLS protects data)                                 | `.env.local`, Vercel                                                                                    |
-| `NEXT_PUBLIC_SITE_URL`                 | Public                                                     | `.env.local`, Vercel                                                                                    |
-| `SUPABASE_SECRET_KEY`                  | **Server-only**, bypasses RLS                              | `.env.test.local` (dev project, tests); the server (Vercel) for account deletion, never `NEXT_PUBLIC_`  |
-| `SUPABASE_DB_PASSWORD`                 | **Local only**, dev database password for the Supabase CLI | `.env.supabase.local` (gitignored), read only by `scripts/supabase.mjs`; never in chat, commits or logs |
+| Variable                               | Exposure                                                   | Where                                                                                                                                            |
+| -------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Public                                                     | `.env.local`, Vercel                                                                                                                             |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public (RLS protects data)                                 | `.env.local`, Vercel                                                                                                                             |
+| `NEXT_PUBLIC_SITE_URL`                 | Public                                                     | `.env.local`, Vercel                                                                                                                             |
+| `SUPABASE_SECRET_KEY`                  | **Server-only**, bypasses RLS                              | `.env.test.local` (tests) and Vercel (account deletion), never `NEXT_PUBLIC_`. One project is dev and production, so this is a production secret |
+| `SUPABASE_DB_PASSWORD`                 | **Local only**, dev database password for the Supabase CLI | `.env.supabase.local` (gitignored), read only by `scripts/supabase.mjs`; never in chat, commits or logs                                          |
 
 - The secret key is only imported from `server-only` modules (`src/lib/supabase/admin.ts`). Its one runtime
   use is deleting the signed-in user's own account after the password is re-entered. It never gets a

@@ -14,7 +14,12 @@ Next.js agent rules (this Next version differs from older training data): @AGENT
 - Record any deviation from the Spec or Plan in the Decision log (§10) before or while making it.
 - Steps marked **(U)** need the user (accounts, passwords, tokens, dashboards). Ask, don't work around them.
 - Commit only when the user asks. Never push to production or run `db push` against prod without explicit approval.
-- `supabase db reset --linked` wipes the hosted dev DB. Run it only with the user's explicit OK.
+- **The hosted Supabase project is also production** (owner's decision, 2026-11-20; Plan §10). Every
+  `pnpm db:push` changes the live database: list the pending migrations and get the owner's OK before each push.
+- Never run `supabase db reset` against the hosted project: it would wipe production. Restore drills go into a
+  temporary scratch project (`docs/OPERATIONS.md` §4).
+- Tests and scripts only ever touch throwaway users (`test-*@devworkspace.test`) that they create and delete;
+  never the owner's account or data.
 
 ## Stack
 
