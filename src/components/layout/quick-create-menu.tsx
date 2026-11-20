@@ -22,7 +22,7 @@ import { QuickTaskDialog } from "@/features/tasks/components/quick-task-dialog"
  * until then it is shown disabled with the phase it arrives in.
  */
 const LATER = [
-  { label: "Work session", icon: Timer, phase: "P4" },
+  { label: "Work session", icon: Timer, phase: "P7" },
   { label: "Environment", icon: Server, phase: "P5" },
   { label: "Document", icon: BookOpen, phase: "P6" },
 ] as const

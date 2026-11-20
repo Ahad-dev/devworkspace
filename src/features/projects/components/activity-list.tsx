@@ -10,8 +10,12 @@ import {
   Link2,
   ListPlus,
   MessageSquare,
+  NotebookPen,
+  Pause,
   Pencil,
+  Play,
   RotateCcw,
+  Square,
   Trash2,
   Unlink,
   type LucideIcon,
@@ -46,6 +50,11 @@ const EVENT_ICON: Record<EventType, LucideIcon> = {
   "task.comment_added": MessageSquare,
   "task.dependency_added": Link2,
   "task.dependency_removed": Unlink,
+  "session.started": Play,
+  "session.paused": Pause,
+  "session.resumed": Play,
+  "session.completed": Square,
+  "handoff.saved": NotebookPen,
 }
 
 const FIELD_LABELS: Record<string, string> = {

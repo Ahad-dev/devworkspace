@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 import Link from "next/link"
-import { Archive, ChevronLeft, CircleSlash, History } from "lucide-react"
+import { Archive, ChevronLeft, CircleSlash } from "lucide-react"
 
 import { PageContainer } from "@/components/shared/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -17,9 +17,18 @@ import {
 } from "@/features/tasks/components/task-relations"
 import { LabelsEditor, LinksPanel } from "@/features/tasks/components/task-side-panels"
 import { TaskPriorityMenu, TaskStatusMenu } from "@/features/tasks/components/task-status-menu"
-import { getTask, getTaskRelations, listLabels, listTaskOptions } from "@/features/tasks/queries"
+import {
+  getTask,
+  getTaskRelations,
+  listLabels,
+  listRepositoryOptions,
+  listTaskOptions,
+} from "@/features/tasks/queries"
+import { TaskSessionHistory, TaskWorkPanel } from "@/features/sessions/components/task-work-panel"
+import { getActiveSession, getTaskContinuity } from "@/features/sessions/queries"
 import { isOverdue } from "@/features/tasks/utils"
 import { formatDateTime } from "@/lib/format"
+import { requestTime } from "@/lib/request-time"
 
 export const metadata: Metadata = { title: "Task" }
 
@@ -66,12 +75,17 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
 
 async function TaskDetail({ taskId }: { taskId: string }) {
   const task = await getTask(taskId)
-  const [rel, allLabels, options, profile] = await Promise.all([
+  const [rel, allLabels, options, profile, continuity, active, repositories] = await Promise.all([
     getTaskRelations(task),
     listLabels(),
     listTaskOptions(task.project_id, task.id),
     getMyProfile(),
+    getTaskContinuity(task.id),
+    getActiveSession(),
+    listRepositoryOptions(task.project_id),
   ])
+  // Timers render from this instant on the server and during hydration, then tick live.
+  const renderedAt = await requestTime()
   const tz = profile.timezone
   const archived = Boolean(task.archived_at)
 
@@ -138,6 +152,20 @@ async function TaskDetail({ taskId }: { taskId: string }) {
             readOnly={archived}
           />
 
+          <TaskWorkPanel
+            task={{
+              id: task.id,
+              title: task.title,
+              nextAction: task.next_action,
+              archived,
+            }}
+            continuity={continuity}
+            active={active}
+            repositories={repositories}
+            renderedAt={renderedAt}
+            timeZone={tz}
+          />
+
           {task.status === "blocked" ? (
             <section
               aria-label="Blocker"
@@ -189,6 +217,8 @@ async function TaskDetail({ taskId }: { taskId: string }) {
               readOnly={archived}
             />
           </Section>
+
+          <TaskSessionHistory continuity={continuity} renderedAt={renderedAt} timeZone={tz} />
 
           <Section title="Activity" id="activity-heading">
             <ActivityList events={rel.activity} timeZone={tz} />
@@ -243,17 +273,6 @@ async function TaskDetail({ taskId }: { taskId: string }) {
               links={rel.links}
               readOnly={archived}
             />
-          </div>
-
-          <div className="flex flex-col gap-2 rounded-lg border border-dashed p-3">
-            <h2 className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <History className="size-3.5" aria-hidden />
-              Continuity
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              The latest handoff and work-session history show here once work sessions arrive (Phase
-              4).
-            </p>
           </div>
         </aside>
       </div>

@@ -1,4 +1,4 @@
-// TEMPORARY: Phase 2–3 tables were added by hand in the generator's format because `pnpm db:types`
+// TEMPORARY: Phase 2–4 tables were added by hand in the generator's format because `pnpm db:types`
 // couldn't reach the type endpoint with the current token. Regenerate with `pnpm db:types` and
 // delete this comment once the CLI token can generate types.
 export type Json =
@@ -554,6 +554,178 @@ export type Database = {
           },
         ]
       }
+      work_handoffs: {
+        Row: {
+          completed_summary: string | null
+          created_at: string
+          current_state: string | null
+          id: string
+          next_action: string | null
+          blockers: string | null
+          owner_id: string
+          project_id: string
+          related_links: Json
+          remaining_work: string | null
+          task_id: string
+          technical_notes: string | null
+          work_session_id: string
+        }
+        Insert: {
+          completed_summary?: string | null
+          created_at?: string
+          current_state?: string | null
+          id?: string
+          next_action?: string | null
+          blockers?: string | null
+          owner_id?: string
+          project_id: string
+          related_links?: Json
+          remaining_work?: string | null
+          task_id: string
+          technical_notes?: string | null
+          work_session_id: string
+        }
+        Update: {
+          completed_summary?: string | null
+          created_at?: string
+          current_state?: string | null
+          id?: string
+          next_action?: string | null
+          blockers?: string | null
+          owner_id?: string
+          project_id?: string
+          related_links?: Json
+          remaining_work?: string | null
+          task_id?: string
+          technical_notes?: string | null
+          work_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_handoffs_project_owner_fkey"
+            columns: ["project_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "work_handoffs_session_owner_fkey"
+            columns: ["work_session_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "work_sessions"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "work_handoffs_task_project_fkey"
+            columns: ["task_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id", "project_id"]
+          },
+        ]
+      }
+      work_session_segments: {
+        Row: {
+          id: string
+          owner_id: string
+          segment_ended_at: string | null
+          segment_started_at: string
+          work_session_id: string
+        }
+        Insert: {
+          id?: string
+          owner_id?: string
+          segment_ended_at?: string | null
+          segment_started_at?: string
+          work_session_id: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          segment_ended_at?: string | null
+          segment_started_at?: string
+          work_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_session_segments_session_owner_fkey"
+            columns: ["work_session_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "work_sessions"
+            referencedColumns: ["id", "owner_id"]
+          },
+        ]
+      }
+      work_sessions: {
+        Row: {
+          branch_name: string | null
+          created_at: string
+          ended_at: string | null
+          environment_id: string | null
+          id: string
+          notes: string | null
+          owner_id: string
+          project_id: string
+          repository_id: string | null
+          started_at: string
+          status: Database["public"]["Enums"]["session_status"]
+          task_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          branch_name?: string | null
+          created_at?: string
+          ended_at?: string | null
+          environment_id?: string | null
+          id?: string
+          notes?: string | null
+          owner_id?: string
+          project_id: string
+          repository_id?: string | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["session_status"]
+          task_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          branch_name?: string | null
+          created_at?: string
+          ended_at?: string | null
+          environment_id?: string | null
+          id?: string
+          notes?: string | null
+          owner_id?: string
+          project_id?: string
+          repository_id?: string | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["session_status"]
+          task_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_sessions_project_owner_fkey"
+            columns: ["project_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "work_sessions_repository_project_fkey"
+            columns: ["repository_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "repositories"
+            referencedColumns: ["id", "project_id"]
+          },
+          {
+            foreignKeyName: "work_sessions_task_project_fkey"
+            columns: ["task_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id", "project_id"]
+          },
+        ]
+      }
     }
     Views: {
       project_summaries: {
@@ -584,9 +756,90 @@ export type Database = {
           },
         ]
       }
+      work_session_summaries: {
+        Row: {
+          branch_name: string | null
+          closed_seconds: number | null
+          ended_at: string | null
+          id: string | null
+          last_segment_ended_at: string | null
+          notes: string | null
+          open_segment_started_at: string | null
+          owner_id: string | null
+          project_id: string | null
+          repository_id: string | null
+          segment_count: number | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["session_status"] | null
+          task_id: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_sessions_project_owner_fkey"
+            columns: ["project_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "work_sessions_repository_project_fkey"
+            columns: ["repository_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "repositories"
+            referencedColumns: ["id", "project_id"]
+          },
+          {
+            foreignKeyName: "work_sessions_task_project_fkey"
+            columns: ["task_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id", "project_id"]
+          },
+        ]
+      }
     }
     Functions: {
-      [_ in never]: never
+      complete_work_session: {
+        Args: {
+          p_ended_at?: string
+          p_handoff?: Json
+          p_session_id: string
+          p_update_task_next_action?: boolean
+        }
+        Returns: string
+      }
+      pause_work_session: {
+        Args: {
+          p_ended_at?: string
+          p_handoff?: Json
+          p_session_id: string
+          p_update_task_next_action?: boolean
+        }
+        Returns: string
+      }
+      resume_work_session: {
+        Args: { p_session_id: string }
+        Returns: undefined
+      }
+      save_work_handoff: {
+        Args: {
+          p_handoff: Json
+          p_session_id: string
+          p_update_task_next_action?: boolean
+        }
+        Returns: string
+      }
+      start_work_session: {
+        Args: {
+          p_branch_name?: string
+          p_move_task_to_in_progress?: boolean
+          p_notes?: string
+          p_repository_id?: string
+          p_task_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       activity_event_type:
@@ -612,6 +865,11 @@ export type Database = {
         | "task.comment_added"
         | "task.dependency_added"
         | "task.dependency_removed"
+        | "session.started"
+        | "session.paused"
+        | "session.resumed"
+        | "session.completed"
+        | "handoff.saved"
       priority_level:
         | "urgent"
         | "high"
@@ -644,6 +902,7 @@ export type Database = {
         | "docs"
         | "monorepo"
         | "other"
+      session_status: "active" | "paused" | "completed"
       technology_category:
         | "frontend"
         | "backend"
@@ -811,6 +1070,11 @@ export const Constants = {
         "task.comment_added",
         "task.dependency_added",
         "task.dependency_removed",
+        "session.started",
+        "session.paused",
+        "session.resumed",
+        "session.completed",
+        "handoff.saved",
       ],
       priority_level: [
         "urgent",
@@ -849,6 +1113,7 @@ export const Constants = {
         "monorepo",
         "other",
       ],
+      session_status: ["active", "paused", "completed"],
       technology_category: [
         "frontend",
         "backend",

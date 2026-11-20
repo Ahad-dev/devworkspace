@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ActivityList } from "@/features/projects/components/activity-list"
 import { TechnologyEditor } from "@/features/projects/components/technology-editor"
 import { getMyProfile } from "@/features/profile/queries"
+import { HandoffCard } from "@/features/sessions/components/handoff-card"
+import { getLatestProjectHandoff } from "@/features/sessions/queries"
 import {
   getProject,
   getProjectCounts,
@@ -72,14 +74,16 @@ function ExternalLinkRow({ label, href }: { label: string; href: string | null }
 }
 
 async function Overview({ projectId }: { projectId: string }) {
-  const [project, repositories, technologies, activity, profile, counts] = await Promise.all([
-    getProject(projectId),
-    listRepositories(projectId),
-    listTechnologies(projectId),
-    listProjectActivity(projectId, 1),
-    getMyProfile(),
-    getProjectCounts(projectId),
-  ])
+  const [project, repositories, technologies, activity, profile, counts, latestHandoff] =
+    await Promise.all([
+      getProject(projectId),
+      listRepositories(projectId),
+      listTechnologies(projectId),
+      listProjectActivity(projectId, 1),
+      getMyProfile(),
+      getProjectCounts(projectId),
+      getLatestProjectHandoff(projectId),
+    ])
   const tz = profile.timezone
   const progress = taskProgress(counts.doneTasks, counts.tasks)
 
@@ -134,6 +138,24 @@ async function Overview({ projectId }: { projectId: string }) {
             </p>
           ) : null}
         </Section>
+
+        {latestHandoff ? (
+          <Section
+            title="Latest handoff"
+            action={
+              latestHandoff.task ? (
+                <Link
+                  href={`/tasks/${latestHandoff.task.id}`}
+                  className="max-w-64 truncate text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                >
+                  {latestHandoff.task.title}
+                </Link>
+              ) : null
+            }
+          >
+            <HandoffCard handoff={latestHandoff.handoff} timeZone={tz} />
+          </Section>
+        ) : null}
 
         <Section title="Technology stack">
           <TechnologyEditor

@@ -96,8 +96,8 @@ export function TaskActions({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete “{taskTitle}”?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes the task with its comments, labels, links and dependency
-              links. It can&apos;t be undone.{" "}
+              This permanently deletes the task with its comments, labels, links, dependency links,
+              work sessions and handoffs. It can&apos;t be undone.{" "}
               {subtaskCount
                 ? `It has ${subtaskCount} subtask${subtaskCount === 1 ? "" : "s"}: delete or move them first.`
                 : null}{" "}
