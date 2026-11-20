@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SegmentedControl } from "@/components/ui/segmented-control"
 import { Textarea } from "@/components/ui/textarea"
 import { FormMessage, toFieldErrors } from "@/features/auth/components/form-message"
 import { DOC_CATEGORIES, DOC_CATEGORY_LABELS, type DocCategory } from "@/lib/constants/domain"
@@ -260,15 +260,16 @@ export function DocumentEditor({
         <Field data-invalid={Boolean(errors.content_markdown || contentWarning)}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <FieldLabel htmlFor="doc-edit-content">Content</FieldLabel>
-            <Tabs value={mode} onValueChange={(v) => setMode(v as typeof mode)}>
-              <TabsList>
-                <TabsTrigger value="write">Write</TabsTrigger>
-                <TabsTrigger value="preview">Preview</TabsTrigger>
-                <TabsTrigger value="split" className="hidden lg:inline-flex">
-                  Side by side
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <SegmentedControl
+              label="Editor view"
+              value={mode}
+              onValueChange={setMode}
+              options={[
+                { value: "write", label: "Write" },
+                { value: "preview", label: "Preview" },
+                { value: "split", label: "Side by side", className: "hidden lg:inline-flex" },
+              ]}
+            />
           </div>
           {contentWarning ? (
             <p role="alert" className="flex items-start gap-1.5 text-sm text-destructive">

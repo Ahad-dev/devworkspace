@@ -30,7 +30,14 @@ import {
   type LabelColor,
 } from "@/lib/constants/domain"
 import { cn } from "@/lib/utils"
-import { TASK_VIEWS, TASK_VIEW_LABELS, parseTaskFilters, type TaskView } from "../utils"
+import {
+  DEFAULT_TASK_VIEW,
+  TASK_VIEWS,
+  TASK_VIEW_LABELS,
+  parseTaskFilters,
+  type TaskView,
+  type TaskViewDefaults,
+} from "../utils"
 
 const ALL = "all"
 
@@ -45,8 +52,11 @@ export function TaskFilters({
   projects,
   repositories,
   labels,
+  defaults = DEFAULT_TASK_VIEW,
 }: {
   counts: { inbox: number; blocked: number }
+  /** The user's saved layout and sort: the URL only records departures from them. */
+  defaults?: TaskViewDefaults
   /** Global views only: hidden when the page is scoped to one project. */
   projects?: Option[]
   /** Project views only. */
@@ -56,7 +66,7 @@ export function TaskFilters({
   const router = useRouter()
   const pathname = usePathname()
   const params = useSearchParams()
-  const filters = parseTaskFilters(Object.fromEntries(params.entries()))
+  const filters = parseTaskFilters(Object.fromEntries(params.entries()), defaults)
   const [q, setQ] = React.useState(filters.q)
 
   const update = React.useCallback(
@@ -113,7 +123,7 @@ export function TaskFilters({
             variant={filters.layout === "list" ? "secondary" : "ghost"}
             size="sm"
             aria-pressed={filters.layout === "list"}
-            onClick={() => update({ layout: null })}
+            onClick={() => update({ layout: defaults.layout === "list" ? null : "list" })}
           >
             <List />
             List
@@ -122,7 +132,7 @@ export function TaskFilters({
             variant={filters.layout === "board" ? "secondary" : "ghost"}
             size="sm"
             aria-pressed={filters.layout === "board"}
-            onClick={() => update({ layout: "board" })}
+            onClick={() => update({ layout: defaults.layout === "board" ? null : "board" })}
           >
             <Columns3 />
             Board
@@ -226,7 +236,7 @@ export function TaskFilters({
           {filters.view !== "completed" && filters.view !== "upcoming" ? (
             <Select
               value={filters.sort}
-              onValueChange={(v) => update({ sort: v === "priority" ? null : v })}
+              onValueChange={(v) => update({ sort: v === defaults.sort ? null : v })}
             >
               <SelectTrigger size="sm" aria-label="Sort tasks" className="w-40">
                 <SelectValue />
@@ -248,7 +258,7 @@ export function TaskFilters({
                 setQ("")
                 const next = new URLSearchParams()
                 if (filters.view !== "all") next.set("view", filters.view)
-                if (filters.layout === "board") next.set("layout", "board")
+                if (filters.layout !== defaults.layout) next.set("layout", filters.layout)
                 const qs = next.toString()
                 router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
               }}

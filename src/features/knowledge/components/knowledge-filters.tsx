@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SegmentedControl } from "@/components/ui/segmented-control"
 import {
   COMMAND_CATEGORIES,
   COMMAND_CATEGORY_LABELS,
@@ -79,12 +79,15 @@ export function KnowledgeFilters({
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-      <Tabs value={tab} onValueChange={switchTab}>
-        <TabsList>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="commands">Commands</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <SegmentedControl
+        label="Show"
+        value={tab}
+        onValueChange={switchTab}
+        options={[
+          { value: "documents", label: "Documents" },
+          { value: "commands", label: "Commands" },
+        ]}
+      />
       <div className="relative lg:w-64">
         <Search
           className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"

@@ -4,12 +4,15 @@ import { cache } from "react"
 
 import { requireUser } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { parseTaskViewPreference, type TaskViewDefaults } from "@/features/tasks/utils"
 
 export type MyProfile = {
   id: string
   email: string | null
   displayName: string | null
   timezone: string
+  /** Default task layout and sort (Spec §6.11). */
+  taskView: TaskViewDefaults
 }
 
 /** The signed-in user's profile. RLS limits the row to auth.uid(); the eq() is for the planner. */
@@ -18,7 +21,7 @@ export const getMyProfile = cache(async (): Promise<MyProfile> => {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, display_name, timezone")
+    .select("id, display_name, timezone, preferences")
     .eq("id", user.id)
     .maybeSingle()
 
@@ -29,5 +32,6 @@ export const getMyProfile = cache(async (): Promise<MyProfile> => {
     email: user.email,
     displayName: data?.display_name ?? null,
     timezone: data?.timezone ?? "UTC",
+    taskView: parseTaskViewPreference(data?.preferences),
   }
 })

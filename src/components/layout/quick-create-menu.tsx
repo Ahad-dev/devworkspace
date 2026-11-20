@@ -27,9 +27,10 @@ export function QuickCreateMenu() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="sm" aria-label="Create new">
-            <Plus />
-            <span className="hidden sm:inline">New</span>
+          {/* The visible text is the name (WCAG 2.5.3); on phones it is screen-reader only. */}
+          <Button size="sm">
+            <Plus aria-hidden />
+            <span className="sr-only sm:not-sr-only">New</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">

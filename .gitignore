@@ -46,3 +46,6 @@ Thumbs.db
 
 # sample-data user from scripts/seed-dev.mts (dev only)
 .seed-dev-user.json
+
+# database dumps hold personal data (docs/OPERATIONS.md §3)
+backups/

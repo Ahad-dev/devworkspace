@@ -55,14 +55,21 @@ export function TaskWorkspace({
 }
 
 async function Toolbar({ projectId }: { projectId?: string }) {
-  const [counts, labels, projects, repositories] = await Promise.all([
+  const [counts, labels, projects, repositories, profile] = await Promise.all([
     getTaskViewCounts({ projectId }),
     listLabels(),
     projectId ? undefined : listProjectOptions(),
     projectId ? listRepositoryOptions(projectId) : undefined,
+    getMyProfile(),
   ])
   return (
-    <TaskFilters counts={counts} labels={labels} projects={projects} repositories={repositories} />
+    <TaskFilters
+      counts={counts}
+      labels={labels}
+      projects={projects}
+      repositories={repositories}
+      defaults={profile.taskView}
+    />
   )
 }
 
@@ -75,12 +82,9 @@ async function Results({
   basePath: string
   project?: { id: string; name: string }
 }) {
-  const sp = await searchParams
-  const filters = parseTaskFilters(sp)
-  const [{ tasks, total, page, pageSize }, profile] = await Promise.all([
-    listTasks(filters, { projectId: project?.id }),
-    getMyProfile(),
-  ])
+  const [sp, profile] = await Promise.all([searchParams, getMyProfile()])
+  const filters = parseTaskFilters(sp, profile.taskView)
+  const { tasks, total, page, pageSize } = await listTasks(filters, { projectId: project?.id })
 
   if (tasks.length === 0 && filters.layout === "list") {
     return <TasksEmpty filters={filters} project={project} />

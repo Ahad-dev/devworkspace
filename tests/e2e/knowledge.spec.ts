@@ -38,10 +38,10 @@ test("knowledge: document, attachment, download; command, copy", async ({ page, 
     "## Install\n\n1. Run `pnpm install`\n2. Copy `.env.example`\n\n<script>alert(1)</script>\n\n```sh\npnpm dev\n```",
   )
   await expect(page.getByRole("status").getByText("Unsaved changes")).toBeVisible()
-  await page.getByRole("tab", { name: "Preview" }).click()
+  await page.getByRole("button", { name: "Preview", exact: true }).click()
   const preview = page.getByRole("region", { name: "Preview" })
   await expect(preview.getByRole("heading", { name: "Install" })).toBeVisible()
-  await page.getByRole("tab", { name: "Write" }).click()
+  await page.getByRole("button", { name: "Write", exact: true }).click()
   await content.press("ControlOrMeta+s")
   await expect(page.getByRole("status").getByText(/^Saved/)).toBeVisible({ timeout: 30_000 })
 
@@ -73,6 +73,14 @@ test("knowledge: document, attachment, download; command, copy", async ({ page, 
   const download = page.waitForEvent("download")
   await page.getByRole("button", { name: "Download notes.txt" }).click()
   expect((await download).suggestedFilename()).toBe("notes.txt")
+
+  // Browsers often give .md files no useful type; the upload still goes in as text/markdown.
+  await page.getByLabel("Choose files to attach").setInputFiles({
+    name: "setup.md",
+    mimeType: "application/octet-stream",
+    buffer: Buffer.from("# Setup\n\nRun pnpm install."),
+  })
+  await expect(files.getByText("setup.md")).toBeVisible({ timeout: 30_000 })
 
   // A file with a secret in it never leaves the browser.
   await page.getByLabel("Choose files to attach").setInputFiles({

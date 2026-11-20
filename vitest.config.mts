@@ -10,7 +10,11 @@ import { defineConfig } from "vitest/config"
  */
 export default defineConfig({
   resolve: {
-    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+      // The real package throws outside React's server runtime; tests call server helpers directly.
+      "server-only": fileURLToPath(new URL("./tests/support/server-only.ts", import.meta.url)),
+    },
   },
   test: {
     projects: [

@@ -18,6 +18,7 @@ export function LoginForm() {
   const searchParams = useSearchParams()
   const [state, formAction, pending] = useActionState(signIn, initialAuthFormState)
   const linkError = searchParams.get("error") === "link" && state.status === "idle"
+  const accountDeleted = searchParams.get("deleted") === "1" && state.status === "idle"
 
   return (
     <form action={formAction} className="flex flex-col gap-6" noValidate>
@@ -29,6 +30,9 @@ export function LoginForm() {
       </div>
 
       {linkError ? <FormMessage status="error">{LINK_ERROR}</FormMessage> : null}
+      {accountDeleted ? (
+        <FormMessage status="success">Your account and all of its data were deleted.</FormMessage>
+      ) : null}
       {state.status === "error" && state.message ? (
         <FormMessage status="error">{state.message}</FormMessage>
       ) : null}

@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SegmentedControl } from "@/components/ui/segmented-control"
 import {
   EDITABLE_PROJECT_STATUSES,
   PROJECT_STATUS_META,
@@ -53,12 +53,15 @@ export function ProjectFilters() {
 
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center">
-      <Tabs value={view} onValueChange={(v) => setParam("view", v === "active" ? null : v)}>
-        <TabsList>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="archived">Archived</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <SegmentedControl
+        label="Show projects"
+        value={view}
+        onValueChange={(v) => setParam("view", v === "active" ? null : v)}
+        options={[
+          { value: "active", label: "Active" },
+          { value: "archived", label: "Archived" },
+        ]}
+      />
 
       <div className="relative md:w-64">
         <Search

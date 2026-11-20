@@ -10,11 +10,18 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 export default function WorkspaceLayout({ children }: LayoutProps<"/">) {
   return (
     <SidebarProvider>
+      {/* First stop for keyboard users: jump past the sidebar and header. */}
+      <a
+        href="#main"
+        className="sr-only z-50 rounded-md bg-background px-3 py-2 text-sm font-medium shadow focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:ring-3 focus:ring-ring/50"
+      >
+        Skip to main content
+      </a>
       <AppSidebar />
       {/* min-w-0: wide content (task tables, the board) scrolls inside the page, not the page. */}
       <SidebarInset className="min-w-0">
         <AppHeader />
-        <main id="main" className="flex min-w-0 flex-1 flex-col">
+        <main id="main" tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">
           {children}
         </main>
       </SidebarInset>

@@ -23,6 +23,10 @@ test("dashboard quick actions, focus and global search", async ({ page }) => {
   await newProject.getByRole("button", { name: "Create project" }).click()
   await expect(page).toHaveURL(/\/projects\/[0-9a-f-]{36}$/, { timeout: 60_000 })
   const projectId = page.url().split("/").pop()!
+  // Let the redirect finish rendering; navigating mid-redirect aborts the next page load.
+  await expect(page.getByRole("heading", { name: projectName, level: 1 })).toBeVisible({
+    timeout: 30_000,
+  })
 
   // A service whose name we'll search for.
   await page.goto(`/projects/${projectId}/services`)

@@ -37,10 +37,12 @@ How this is enforced:
 | `NEXT_PUBLIC_SUPABASE_URL`             | Public                                                     | `.env.local`, Vercel                                                                                    |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public (RLS protects data)                                 | `.env.local`, Vercel                                                                                    |
 | `NEXT_PUBLIC_SITE_URL`                 | Public                                                     | `.env.local`, Vercel                                                                                    |
-| `SUPABASE_SECRET_KEY`                  | **Server-only**, bypasses RLS                              | `.env.test.local` (dev project, tests only); production only if a server-only feature needs it          |
+| `SUPABASE_SECRET_KEY`                  | **Server-only**, bypasses RLS                              | `.env.test.local` (dev project, tests); the server (Vercel) for account deletion, never `NEXT_PUBLIC_`  |
 | `SUPABASE_DB_PASSWORD`                 | **Local only**, dev database password for the Supabase CLI | `.env.supabase.local` (gitignored), read only by `scripts/supabase.mjs`; never in chat, commits or logs |
 
-- The secret key is only imported from `server-only` modules. It never gets a `NEXT_PUBLIC_` prefix.
+- The secret key is only imported from `server-only` modules (`src/lib/supabase/admin.ts`). Its one runtime
+  use is deleting the signed-in user's own account after the password is re-entered. It never gets a
+  `NEXT_PUBLIC_` prefix; without it, account deletion is shown as unavailable.
   `src/lib/env.ts` refuses a `sb_secret_` value in the public key slot.
 - `.env*` files are gitignored except `.env.example`.
 
@@ -55,11 +57,27 @@ How this is enforced:
 
 ## 5. Files and rendering (Phase 6)
 
+- Uploads are typed by extension on the server and re-wrapped with that type in the browser (Storage
+  ignores the content-type option for Blobs). Text files are screened for secrets before upload.
+
 - Attachments live in a private bucket, under paths scoped to the owner, and are served through short-lived
   signed URLs. File type and size are allowlisted; no SVG or HTML.
 - Markdown is rendered sanitized (no raw HTML, no `javascript:` links).
 
-## 6. Reporting
+## 6. Headers, logs and audits (Phase 8)
+
+- `next.config.ts` sends a Content Security Policy (self plus the Supabase project only, no framing, no
+  plugins, forms to self), `X-Frame-Options: DENY`, `nosniff`, a strict referrer policy, a restrictive
+  Permissions-Policy and HSTS in production. Scripts keep `'unsafe-inline'` because Cache Components
+  prerender a static shell, which rules out per-request nonces; raw HTML is never rendered.
+- Logs record counts and error codes only: no values, tokens, URLs with credentials or request bodies.
+- `tests/integration/rls-audit.test.ts` reads the list of exposed tables from the live API and checks,
+  for every table and view, that another user and an anonymous visitor can't read, change, delete or
+  attach to the owner's rows. A new table without an audit entry fails it.
+- `pnpm supabase db lint --remote` is clean. The Security and Performance Advisors need a dashboard
+  check (the CLI token can't read them).
+
+## 7. Reporting
 
 Found something that breaks these rules? Treat it as a bug with top priority: fix it, add a test,
 and note it in the Plan's decision log.

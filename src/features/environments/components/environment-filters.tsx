@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SegmentedControl } from "@/components/ui/segmented-control"
 import { ENVIRONMENT_TYPE_META, ENVIRONMENT_TYPES } from "@/lib/constants/domain"
 
 const ALL = "all"
@@ -47,13 +47,16 @@ export function EnvironmentFilters() {
 
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center">
-      <Tabs value={view} onValueChange={(v) => setParam("view", v === "active" ? null : v)}>
-        <TabsList>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="review">Needs review</TabsTrigger>
-          <TabsTrigger value="archived">Archived</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <SegmentedControl
+        label="Show environments"
+        value={view}
+        onValueChange={(v) => setParam("view", v === "active" ? null : v)}
+        options={[
+          { value: "active", label: "Active" },
+          { value: "review", label: "Needs review" },
+          { value: "archived", label: "Archived" },
+        ]}
+      />
       <div className="relative md:w-56">
         <Search
           className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"

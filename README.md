@@ -59,17 +59,18 @@ Authentication → Users → Add user.
 
 ## Scripts
 
-| Script                              | What it does                                       |
-| ----------------------------------- | -------------------------------------------------- |
-| `pnpm dev`                          | Dev server                                         |
-| `pnpm build` / `pnpm start`         | Production build / serve                           |
-| `pnpm lint`                         | ESLint                                             |
-| `pnpm typecheck`                    | Route types + `tsc --noEmit`                       |
-| `pnpm format` / `pnpm format:check` | Prettier write / check                             |
-| `pnpm db:new <name>`                | New SQL migration in `supabase/migrations/`        |
-| `pnpm db:push`                      | Apply pending migrations to the **linked** project |
-| `pnpm db:types`                     | Regenerate `src/types/database.types.ts`           |
-| `pnpm supabase <args>`              | Any Supabase CLI command                           |
+| Script                              | What it does                                                           |
+| ----------------------------------- | ---------------------------------------------------------------------- |
+| `pnpm dev`                          | Dev server                                                             |
+| `pnpm build` / `pnpm start`         | Production build / serve                                               |
+| `pnpm lint`                         | ESLint                                                                 |
+| `pnpm typecheck`                    | Route types + `tsc --noEmit`                                           |
+| `pnpm format` / `pnpm format:check` | Prettier write / check                                                 |
+| `pnpm db:new <name>`                | New SQL migration in `supabase/migrations/`                            |
+| `pnpm db:push`                      | Apply pending migrations to the **linked** project                     |
+| `pnpm db:types`                     | Regenerate `src/types/database.types.ts`                               |
+| `pnpm supabase <args>`              | Any Supabase CLI command                                               |
+| `node scripts/seed-dev.mts`         | Busy sample workspace for a throwaway dev user (`--delete` removes it) |
 
 ## Testing
 
@@ -97,3 +98,9 @@ binary for your platform (the npm package `@supabase/cli-<platform>` or a GitHub
 `supabase/cli`), check its SHA-512, and put the executable at `.tools/supabase-cli/`.
 
 Database changes only happen through migration files. Never edit an applied migration; add a new one.
+
+## Operations and security
+
+- [docs/OPERATIONS.md](docs/OPERATIONS.md): environments, migrations to production, backups, the restore
+  drill, and what to do when something breaks.
+- [docs/SECURITY.md](docs/SECURITY.md): the secrets boundary, keys, headers and the RLS audit.

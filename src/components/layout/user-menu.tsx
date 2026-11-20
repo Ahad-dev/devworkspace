@@ -32,7 +32,13 @@ export function UserMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full" aria-label="Account menu">
+        {/* The visible initials are part of the name (WCAG 2.5.3, label in name). */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full"
+          aria-label={`Account menu, ${initials(displayName, email)}`}
+        >
           <Avatar className="size-7">
             <AvatarFallback className="text-xs font-medium">
               {initials(displayName, email)}

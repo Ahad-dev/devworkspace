@@ -198,7 +198,10 @@ export function ActivityList({
               <p className="min-w-0 text-sm">
                 {/* Task summaries already name the task, so the summary itself links to it. */}
                 {showContext && e.task ? (
-                  <Link href={`/tasks/${e.task.id}`} className="underline-offset-4 hover:underline">
+                  <Link
+                    href={`/tasks/${e.task.id}`}
+                    className="underline decoration-muted-foreground/50 underline-offset-4 hover:decoration-foreground"
+                  >
                     {e.summary}
                   </Link>
                 ) : (
@@ -211,7 +214,7 @@ export function ActivityList({
                     {e.project ? (
                       <Link
                         href={`/projects/${e.project.id}`}
-                        className="underline-offset-4 hover:text-foreground hover:underline"
+                        className="underline decoration-muted-foreground/50 underline-offset-4 hover:text-foreground hover:decoration-foreground"
                       >
                         {e.project.name}
                       </Link>

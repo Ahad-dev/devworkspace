@@ -82,9 +82,13 @@ export function AttachmentsPanel({
         toast.error(r.error)
         continue
       }
+      // Storage takes the type from the Blob itself (the contentType option is ignored for
+      // Blobs), and browsers often report "" for .md/.log or application/vnd.ms-excel for .csv.
+      // Re-wrap the file with the type decided from its extension.
+      const body = new Blob([file], { type: r.data.mimeType })
       const { error } = await supabase.storage
         .from("attachments")
-        .upload(r.data.path, file, { contentType: r.data.mimeType, upsert: false })
+        .upload(r.data.path, body, { contentType: r.data.mimeType, upsert: false })
       if (error) {
         await removeAttachment(r.data.id)
         toast.error(`Couldn't upload ${file.name}. Try again.`)

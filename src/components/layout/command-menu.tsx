@@ -46,6 +46,7 @@ export function CommandMenu() {
   const [results, setResults] = React.useState<SearchResult[]>([])
   const [searching, setSearching] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [selected, setSelected] = React.useState("")
   const latest = React.useRef(0)
   // Hydration-safe platform check: "Ctrl" on the server, the real key once mounted.
   const isMac = React.useSyncExternalStore(
@@ -80,6 +81,9 @@ export function CommandMenu() {
       if (r.ok) {
         setResults(r.results)
         setError(null)
+        // Enter opens the best match, not "See all results".
+        const first = groupResults(r.results)[0]?.[1][0]
+        setSelected(first ? `${first.kind}-${first.id}` : "see-all-results")
       } else {
         setError(r.error)
       }
@@ -125,10 +129,9 @@ export function CommandMenu() {
         size="sm"
         onClick={() => setOpen(true)}
         className="w-9 justify-center px-0 text-muted-foreground sm:w-56 sm:justify-start sm:px-2.5"
-        aria-label="Search"
       >
-        <Search />
-        <span className="hidden sm:inline">Search…</span>
+        <Search aria-hidden />
+        <span className="sr-only sm:not-sr-only">Search…</span>
         <KbdGroup className="ml-auto hidden sm:inline-flex">
           <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
           <Kbd>K</Kbd>
@@ -141,7 +144,7 @@ export function CommandMenu() {
         title="Search"
         description="Search the workspace or jump to a page"
       >
-        <Command shouldFilter={false} loop>
+        <Command shouldFilter={false} loop value={selected} onValueChange={setSelected}>
           <CommandInput
             value={q}
             onValueChange={changeQuery}

@@ -86,10 +86,10 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted-foreground: oklch(0.5 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.52 0.22 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -108,30 +108,30 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   /* semantic (DevWorkspace) */
-  --success: oklch(0.55 0.14 150);
+  --success: oklch(0.49 0.13 150);
   --success-foreground: oklch(0.985 0 0);
-  --warning: oklch(0.64 0.15 65);
+  --warning: oklch(0.53 0.13 60);
   --warning-foreground: oklch(0.145 0 0);
-  --info: oklch(0.55 0.16 255);
+  --info: oklch(0.5 0.16 255);
   --info-foreground: oklch(0.985 0 0);
   /* task status */
-  --status-inbox: oklch(0.556 0 0);
+  --status-inbox: oklch(0.5 0 0);
   --status-ready: var(--info);
   --status-in-progress: var(--warning);
-  --status-blocked: oklch(0.577 0.215 27);
-  --status-review: oklch(0.55 0.18 295);
+  --status-blocked: oklch(0.52 0.2 27);
+  --status-review: oklch(0.5 0.18 295);
   --status-done: var(--success);
   /* priority */
-  --priority-urgent: oklch(0.577 0.215 27);
-  --priority-high: oklch(0.62 0.17 45);
-  --priority-medium: oklch(0.55 0.04 255);
-  --priority-low: oklch(0.65 0 0);
+  --priority-urgent: oklch(0.52 0.2 27);
+  --priority-high: oklch(0.53 0.15 45);
+  --priority-medium: oklch(0.48 0.04 255);
+  --priority-low: oklch(0.5 0 0);
   /* environment type */
-  --env-local: oklch(0.556 0 0);
+  --env-local: oklch(0.5 0 0);
   --env-development: var(--info);
   --env-staging: var(--warning);
-  --env-production: oklch(0.577 0.215 27);
-  --env-custom: oklch(0.55 0.18 295);
+  --env-production: oklch(0.52 0.2 27);
+  --env-custom: oklch(0.5 0.18 295);
 }
 
 .dark {

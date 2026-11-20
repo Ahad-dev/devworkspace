@@ -70,13 +70,31 @@ export type TaskFilters = {
   page: number
 }
 
+/** The user's default task view (Spec §6.11; Plan P8.1), kept in profiles.preferences.task_view. */
+export type TaskViewDefaults = { layout: "list" | "board"; sort: TaskSort }
+export const DEFAULT_TASK_VIEW: TaskViewDefaults = { layout: "list", sort: "priority" }
+
+/** Reads preferences.task_view, ignoring anything unexpected. */
+export function parseTaskViewPreference(preferences: unknown): TaskViewDefaults {
+  const raw = (preferences as { task_view?: { layout?: unknown; sort?: unknown } } | null)
+    ?.task_view
+  const layout = raw?.layout === "board" ? "board" : "list"
+  const sort = (TASK_SORTS as readonly unknown[]).includes(raw?.sort)
+    ? (raw!.sort as TaskSort)
+    : DEFAULT_TASK_VIEW.sort
+  return { layout, sort }
+}
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /**
  * Parse URL search params into typed filters. Unknown values are dropped rather than trusted.
  * Multi-value params are comma-separated: ?status=ready,in_progress&priority=urgent,high
  */
-export function parseTaskFilters(sp: Record<string, string | string[] | undefined>): TaskFilters {
+export function parseTaskFilters(
+  sp: Record<string, string | string[] | undefined>,
+  defaults: TaskViewDefaults = DEFAULT_TASK_VIEW,
+): TaskFilters {
   const one = (k: string) => {
     const v = sp[k]
     return (Array.isArray(v) ? v[0] : v)?.toString() ?? ""
@@ -96,7 +114,9 @@ export function parseTaskFilters(sp: Record<string, string | string[] | undefine
 
   return {
     view: TASK_VIEWS.includes(view) ? view : "all",
-    layout: one("layout") === "board" ? "board" : "list",
+    // An explicit layout or sort wins; otherwise the user's saved default applies.
+    layout:
+      one("layout") === "board" ? "board" : one("layout") === "list" ? "list" : defaults.layout,
     q: one("q").trim().slice(0, 100),
     projectId: UUID.test(project) ? project : null,
     repositoryId: UUID.test(repo) ? repo : null,
@@ -104,7 +124,7 @@ export function parseTaskFilters(sp: Record<string, string | string[] | undefine
     priorities: many("priority", Object.keys(PRIORITY_META) as Priority[]),
     labelId: UUID.test(label) ? label : null,
     flags: many("flags", TASK_FLAGS),
-    sort: TASK_SORTS.includes(sort) ? sort : "priority",
+    sort: TASK_SORTS.includes(sort) ? sort : defaults.sort,
     page: Number.isFinite(page) && page > 0 ? page : 1,
   }
 }
