@@ -2415,43 +2415,43 @@ DevWorkspace is ready for first personal production use when all P0 and P1 requi
 
 ## Product functionality
 
-- [ ] User can sign in and access a private workspace.
-- [ ] User can create, edit, archive, and restore projects.
-- [ ] User can add multiple repositories and technology records to a project.
-- [ ] User can create tasks from the global workspace and project page.
-- [ ] User can manage tasks in a list and kanban board.
-- [ ] User can prioritize, filter, search, and update tasks.
-- [ ] User can create subtasks, comments, labels, and dependencies.
-- [ ] Blocked tasks require blocker details.
-- [ ] In-progress tasks prominently show next action.
-- [ ] User can start, pause, resume, and complete work sessions.
-- [ ] User can save and review handoff snapshots.
-- [ ] User can create local, development, staging, production, and custom environments.
-- [ ] User can register services and infrastructure instances.
-- [ ] User can register environment variable names and compare them.
-- [ ] User can link sensitive configuration to an external vault reference without storing values.
-- [ ] User can create Markdown documents and upload private attachments.
-- [ ] User can save and copy command snippets.
-- [ ] User can search core project and engineering information.
-- [ ] Dashboard shows work queue, current focus, overdue work, blocked work, and recent activity.
-- [ ] User can export their data.
+- [x] User can sign in and access a private workspace.
+- [x] User can create, edit, archive, and restore projects.
+- [x] User can add multiple repositories and technology records to a project.
+- [x] User can create tasks from the global workspace and project page.
+- [x] User can manage tasks in a list and kanban board.
+- [x] User can prioritize, filter, search, and update tasks.
+- [x] User can create subtasks, comments, labels, and dependencies.
+- [x] Blocked tasks require blocker details.
+- [x] In-progress tasks prominently show next action.
+- [x] User can start, pause, resume, and complete work sessions.
+- [x] User can save and review handoff snapshots.
+- [x] User can create local, development, staging, production, and custom environments.
+- [x] User can register services and infrastructure instances.
+- [x] User can register environment variable names and compare them.
+- [x] User can link sensitive configuration to an external vault reference without storing values.
+- [x] User can create Markdown documents and upload private attachments.
+- [x] User can save and copy command snippets.
+- [x] User can search core project and engineering information.
+- [x] Dashboard shows work queue, current focus, overdue work, blocked work, and recent activity.
+- [x] User can export their data.
 
 ## Security and operations
 
-- [ ] RLS enabled for every exposed application table.
-- [ ] Cross-user read/write tests pass.
-- [ ] Cross-project relationship tests pass.
-- [ ] No raw secret values are stored by environment forms or tables.
-- [ ] Secret/service-role keys are not exposed in browser bundles.
-- [ ] Storage bucket is private and access policies are tested.
-- [ ] Uploaded files are validated.
-- [ ] Database migrations are committed and reproducible.
-- [ ] Development and production Supabase projects are separate.
-- [ ] Production deployment has secure environment variables.
-- [ ] Backup and restore approach is documented and tested.
-- [ ] Error handling and logs do not leak secrets.
-- [ ] Critical end-to-end tests pass.
-- [ ] Responsive and keyboard accessibility checks are complete.
+- [x] RLS enabled for every exposed application table.
+- [x] Cross-user read/write tests pass.
+- [x] Cross-project relationship tests pass.
+- [x] No raw secret values are stored by environment forms or tables.
+- [x] Secret/service-role keys are not exposed in browser bundles.
+- [x] Storage bucket is private and access policies are tested.
+- [x] Uploaded files are validated.
+- [ ] Database migrations are committed and reproducible. _(Committed and applied in order; a rebuild from an empty database is proven by the restore drill into a scratch project, still to do: `docs/OPERATIONS.md` §4.)_
+- [ ] Development and production Supabase projects are separate. _(Not applicable by the owner's choice: one project serves both, Plan §10, 2026-11-20.)_
+- [x] Production deployment has secure environment variables.
+- [ ] Backup and restore approach is documented and tested. _(Documented in `docs/OPERATIONS.md` and the first backup is taken; the restore drill is still to do.)_
+- [x] Error handling and logs do not leak secrets.
+- [x] Critical end-to-end tests pass.
+- [x] Responsive and keyboard accessibility checks are complete.
 
 ---
 
