@@ -1,10 +1,13 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 import Link from "next/link"
-import { Archive, ChevronLeft, CircleSlash } from "lucide-react"
+import { Archive, ChevronLeft, CircleSlash, FileText } from "lucide-react"
 
+import { Markdown } from "@/components/shared/markdown"
 import { PageContainer } from "@/components/shared/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
+import { DocCategoryBadge } from "@/features/knowledge/components/knowledge-badges"
+import { listTaskDocuments } from "@/features/knowledge/queries"
 import { getMyProfile } from "@/features/profile/queries"
 import { ActivityList } from "@/features/projects/components/activity-list"
 import { NextActionCard } from "@/features/tasks/components/next-action-card"
@@ -75,15 +78,17 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
 
 async function TaskDetail({ taskId }: { taskId: string }) {
   const task = await getTask(taskId)
-  const [rel, allLabels, options, profile, continuity, active, repositories] = await Promise.all([
-    getTaskRelations(task),
-    listLabels(),
-    listTaskOptions(task.project_id, task.id),
-    getMyProfile(),
-    getTaskContinuity(task.id),
-    getActiveSession(),
-    listRepositoryOptions(task.project_id),
-  ])
+  const [rel, allLabels, options, profile, continuity, active, repositories, documents] =
+    await Promise.all([
+      getTaskRelations(task),
+      listLabels(),
+      listTaskOptions(task.project_id, task.id),
+      getMyProfile(),
+      getTaskContinuity(task.id),
+      getActiveSession(),
+      listRepositoryOptions(task.project_id),
+      listTaskDocuments(task.id),
+    ])
   // Timers render from this instant on the server and during hydration, then tick live.
   const renderedAt = await requestTime()
   const tz = profile.timezone
@@ -181,8 +186,7 @@ async function TaskDetail({ taskId }: { taskId: string }) {
 
           <Section title="Description" id="description-heading">
             {task.description ? (
-              // Plain text until the sanitized Markdown renderer lands in Phase 6.
-              <p className="text-sm whitespace-pre-wrap">{task.description}</p>
+              <Markdown>{task.description}</Markdown>
             ) : (
               <p className="text-sm text-muted-foreground">
                 No description.{" "}
@@ -263,6 +267,30 @@ async function TaskDetail({ taskId }: { taskId: string }) {
               allLabels={allLabels}
               readOnly={archived}
             />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h2 className="text-xs text-muted-foreground">Documents</h2>
+            {documents.length ? (
+              <ul className="flex flex-col gap-1.5">
+                {documents.map((d) => (
+                  <li key={d.id} className="flex min-w-0 items-center gap-1.5 text-sm">
+                    <FileText className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                    <Link
+                      href={`/knowledge/documents/${d.id}`}
+                      className="min-w-0 truncate underline-offset-4 hover:underline"
+                    >
+                      {d.title}
+                    </Link>
+                    <DocCategoryBadge category={d.category} className="hidden sm:inline-flex" />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                None. Link a task from a document&apos;s page.
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-2">

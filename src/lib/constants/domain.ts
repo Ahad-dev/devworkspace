@@ -431,3 +431,92 @@ export const VERIFICATION_METHOD_LABELS: Record<VerificationMethod, string> = {
 
 /** Suggestions for the free-text vault provider (Plan §9 decision 4: none chosen). */
 export const SECRET_PROVIDERS = ["Infisical", "Doppler", "1Password", "Other"] as const
+
+/* Knowledge base (Spec FR-10, FR-11) ------------------------------------------ */
+
+export const DOC_CATEGORIES = [
+  "architecture",
+  "requirements",
+  "setup",
+  "api",
+  "database",
+  "deployment",
+  "troubleshooting",
+  "adr",
+  "notes",
+  "general",
+] as const
+export type DocCategory = (typeof DOC_CATEGORIES)[number]
+export const DOC_CATEGORY_LABELS: Record<DocCategory, string> = {
+  architecture: "Architecture",
+  requirements: "Requirements / spec",
+  setup: "Setup / installation",
+  api: "API",
+  database: "Database / schema",
+  deployment: "Deployment / runbook",
+  troubleshooting: "Troubleshooting",
+  adr: "Decision record (ADR)",
+  notes: "Meeting / technical notes",
+  general: "General",
+}
+
+export const COMMAND_SHELLS = ["powershell", "bash", "zsh", "cmd", "other"] as const
+export type CommandShell = (typeof COMMAND_SHELLS)[number]
+export const COMMAND_SHELL_LABELS: Record<CommandShell, string> = {
+  powershell: "PowerShell",
+  bash: "Bash",
+  zsh: "Zsh",
+  cmd: "CMD",
+  other: "Other shell",
+}
+
+export const COMMAND_OSES = ["windows", "macos", "linux", "cross_platform"] as const
+export type CommandOs = (typeof COMMAND_OSES)[number]
+export const COMMAND_OS_LABELS: Record<CommandOs, string> = {
+  windows: "Windows",
+  macos: "macOS",
+  linux: "Linux",
+  cross_platform: "Any OS",
+}
+
+export const COMMAND_CATEGORIES = [
+  "install",
+  "development",
+  "test",
+  "build",
+  "database",
+  "deployment",
+  "maintenance",
+  "other",
+] as const
+export type CommandCategory = (typeof COMMAND_CATEGORIES)[number]
+export const COMMAND_CATEGORY_LABELS: Record<CommandCategory, string> = {
+  install: "Install",
+  development: "Development",
+  test: "Test",
+  build: "Build",
+  database: "Database",
+  deployment: "Deployment",
+  maintenance: "Maintenance",
+  other: "Other",
+}
+
+/**
+ * Attachment allowlist (Plan P6.2): the MIME type comes from the extension, never from the
+ * browser. No SVG or HTML. The bucket and the document_attachments check use the same list.
+ */
+export const ATTACHMENT_TYPES = {
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+  txt: "text/plain",
+  log: "text/plain",
+  md: "text/markdown",
+  csv: "text/csv",
+  json: "application/json",
+} as const
+export type AttachmentMime = (typeof ATTACHMENT_TYPES)[keyof typeof ATTACHMENT_TYPES]
+export const ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024

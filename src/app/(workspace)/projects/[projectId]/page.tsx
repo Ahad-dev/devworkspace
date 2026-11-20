@@ -4,6 +4,7 @@ import Link from "next/link"
 import { ExternalLink } from "lucide-react"
 
 import { PriorityBadge } from "@/components/shared/domain-badges"
+import { Markdown } from "@/components/shared/markdown"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ActivityList } from "@/features/projects/components/activity-list"
 import { TechnologyEditor } from "@/features/projects/components/technology-editor"
@@ -121,8 +122,7 @@ async function Overview({ projectId }: { projectId: string }) {
           }
         >
           {project.description ? (
-            // Plain text until the sanitized Markdown renderer lands in Phase 6.
-            <p className="text-sm whitespace-pre-wrap">{project.description}</p>
+            <Markdown>{project.description}</Markdown>
           ) : (
             <p className="text-sm text-muted-foreground">
               No description yet. Add the project&apos;s purpose and scope from{" "}

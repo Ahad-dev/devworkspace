@@ -1,4 +1,4 @@
-// TEMPORARY: Phase 2–5 tables were added by hand in the generator's format because `pnpm db:types`
+// TEMPORARY: Phase 2–6 tables were added by hand in the generator's format because `pnpm db:types`
 // couldn't reach the type endpoint with the current token. Regenerate with `pnpm db:types` and
 // delete this comment once the CLI token can generate types.
 export type Json =
@@ -402,6 +402,42 @@ export type Database = {
           },
         ]
       }
+      task_document_links: {
+        Row: {
+          task_id: string
+          document_id: string
+          owner_id: string
+          created_at: string
+        }
+        Insert: {
+          task_id: string
+          document_id: string
+          owner_id?: string
+          created_at?: string
+        }
+        Update: {
+          task_id?: string
+          document_id?: string
+          owner_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_document_links_document_owner_fkey"
+            columns: ["document_id","owner_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id","owner_id"]
+          },
+          {
+            foreignKeyName: "task_document_links_task_owner_fkey"
+            columns: ["task_id","owner_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id","owner_id"]
+          },
+        ]
+      }
       task_labels: {
         Row: {
           color: string
@@ -551,6 +587,196 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "repositories"
             referencedColumns: ["id", "project_id"]
+          },
+        ]
+      }
+      command_snippets: {
+        Row: {
+          id: string
+          owner_id: string
+          created_at: string
+          updated_at: string
+          project_id: string | null
+          repository_id: string | null
+          environment_id: string | null
+          title: string
+          command_text: string
+          description: string | null
+          shell: Database["public"]["Enums"]["command_shell"]
+          operating_system: Database["public"]["Enums"]["command_os"]
+          category: Database["public"]["Enums"]["command_category"]
+          prerequisites: string | null
+          is_destructive: boolean
+          search_vector: unknown
+        }
+        Insert: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          project_id?: string | null
+          repository_id?: string | null
+          environment_id?: string | null
+          title: string
+          command_text: string
+          description?: string | null
+          shell?: Database["public"]["Enums"]["command_shell"]
+          operating_system?: Database["public"]["Enums"]["command_os"]
+          category?: Database["public"]["Enums"]["command_category"]
+          prerequisites?: string | null
+          is_destructive?: boolean
+          search_vector?: never
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          project_id?: string | null
+          repository_id?: string | null
+          environment_id?: string | null
+          title?: string
+          command_text?: string
+          description?: string | null
+          shell?: Database["public"]["Enums"]["command_shell"]
+          operating_system?: Database["public"]["Enums"]["command_os"]
+          category?: Database["public"]["Enums"]["command_category"]
+          prerequisites?: string | null
+          is_destructive?: boolean
+          search_vector?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "command_snippets_environment_project_fkey"
+            columns: ["environment_id","project_id"]
+            isOneToOne: false
+            referencedRelation: "environments"
+            referencedColumns: ["id","project_id"]
+          },
+          {
+            foreignKeyName: "command_snippets_project_owner_fkey"
+            columns: ["project_id","owner_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id","owner_id"]
+          },
+          {
+            foreignKeyName: "command_snippets_repository_project_fkey"
+            columns: ["repository_id","project_id"]
+            isOneToOne: false
+            referencedRelation: "repositories"
+            referencedColumns: ["id","project_id"]
+          },
+        ]
+      }
+      document_attachments: {
+        Row: {
+          id: string
+          owner_id: string
+          created_at: string
+          document_id: string
+          storage_path: string
+          file_name: string
+          mime_type: string
+          size_bytes: number
+        }
+        Insert: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          document_id: string
+          storage_path: string
+          file_name: string
+          mime_type: string
+          size_bytes: number
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          document_id?: string
+          storage_path?: string
+          file_name?: string
+          mime_type?: string
+          size_bytes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_attachments_document_owner_fkey"
+            columns: ["document_id","owner_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id","owner_id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          id: string
+          owner_id: string
+          created_at: string
+          updated_at: string
+          project_id: string | null
+          repository_id: string | null
+          environment_id: string | null
+          title: string
+          category: Database["public"]["Enums"]["doc_category"]
+          summary: string | null
+          content_markdown: string
+          archived_at: string | null
+          search_vector: unknown
+        }
+        Insert: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          project_id?: string | null
+          repository_id?: string | null
+          environment_id?: string | null
+          title: string
+          category?: Database["public"]["Enums"]["doc_category"]
+          summary?: string | null
+          content_markdown?: string
+          archived_at?: string | null
+          search_vector?: never
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          project_id?: string | null
+          repository_id?: string | null
+          environment_id?: string | null
+          title?: string
+          category?: Database["public"]["Enums"]["doc_category"]
+          summary?: string | null
+          content_markdown?: string
+          archived_at?: string | null
+          search_vector?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_environment_project_fkey"
+            columns: ["environment_id","project_id"]
+            isOneToOne: false
+            referencedRelation: "environments"
+            referencedColumns: ["id","project_id"]
+          },
+          {
+            foreignKeyName: "documents_project_owner_fkey"
+            columns: ["project_id","owner_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id","owner_id"]
+          },
+          {
+            foreignKeyName: "documents_repository_project_fkey"
+            columns: ["repository_id","project_id"]
+            isOneToOne: false
+            referencedRelation: "repositories"
+            referencedColumns: ["id","project_id"]
           },
         ]
       }
@@ -1211,6 +1437,16 @@ export type Database = {
         | "variable.removed"
         | "secret_reference.added"
         | "secret_reference.removed"
+        | "document.created"
+        | "document.updated"
+        | "document.archived"
+        | "document.restored"
+        | "document.deleted"
+        | "attachment.added"
+        | "attachment.removed"
+        | "command.created"
+        | "command.updated"
+        | "command.deleted"
       priority_level:
         | "urgent"
         | "high"
@@ -1243,6 +1479,10 @@ export type Database = {
         | "docs"
         | "monorepo"
         | "other"
+      command_category: "install" | "development" | "test" | "build" | "database" | "deployment" | "maintenance" | "other"
+      command_os: "windows" | "macos" | "linux" | "cross_platform"
+      command_shell: "powershell" | "bash" | "zsh" | "cmd" | "other"
+      doc_category: "architecture" | "requirements" | "setup" | "api" | "database" | "deployment" | "troubleshooting" | "adr" | "notes" | "general"
       configuration_status: "unknown" | "configured" | "missing" | "not_applicable"
       environment_status: "active" | "inactive" | "needs_review" | "archived"
       environment_type: "local" | "development" | "staging" | "production" | "custom"
@@ -1439,6 +1679,16 @@ export const Constants = {
         "variable.removed",
         "secret_reference.added",
         "secret_reference.removed",
+        "document.created",
+        "document.updated",
+        "document.archived",
+        "document.restored",
+        "document.deleted",
+        "attachment.added",
+        "attachment.removed",
+        "command.created",
+        "command.updated",
+        "command.deleted",
       ],
       priority_level: [
         "urgent",
@@ -1477,6 +1727,10 @@ export const Constants = {
         "monorepo",
         "other",
       ],
+      command_category: ["install", "development", "test", "build", "database", "deployment", "maintenance", "other"],
+      command_os: ["windows", "macos", "linux", "cross_platform"],
+      command_shell: ["powershell", "bash", "zsh", "cmd", "other"],
+      doc_category: ["architecture", "requirements", "setup", "api", "database", "deployment", "troubleshooting", "adr", "notes", "general"],
       configuration_status: ["unknown", "configured", "missing", "not_applicable"],
       environment_status: ["active", "inactive", "needs_review", "archived"],
       environment_type: ["local", "development", "staging", "production", "custom"],

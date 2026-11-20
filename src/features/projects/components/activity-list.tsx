@@ -4,6 +4,7 @@ import {
   ArrowRightLeft,
   Boxes,
   CircleCheck,
+  FileText,
   Flag,
   FolderPlus,
   GitBranch,
@@ -13,6 +14,7 @@ import {
   ListPlus,
   MessageSquare,
   NotebookPen,
+  Paperclip,
   Pause,
   Pencil,
   Play,
@@ -20,6 +22,7 @@ import {
   Server,
   ShieldCheck,
   Square,
+  SquareTerminal,
   Trash2,
   Unlink,
   Variable,
@@ -77,6 +80,16 @@ const EVENT_ICON: Record<EventType, LucideIcon> = {
   "variable.removed": Variable,
   "secret_reference.added": KeyRound,
   "secret_reference.removed": KeyRound,
+  "document.created": FileText,
+  "document.updated": Pencil,
+  "document.archived": Archive,
+  "document.restored": ArchiveRestore,
+  "document.deleted": Trash2,
+  "attachment.added": Paperclip,
+  "attachment.removed": Paperclip,
+  "command.created": SquareTerminal,
+  "command.updated": SquareTerminal,
+  "command.deleted": Trash2,
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -126,6 +139,14 @@ const FIELD_LABELS: Record<string, string> = {
   blocker_details: "blocker details",
   repository_id: "repository",
   parent_task_id: "parent task",
+  summary: "summary",
+  content: "content",
+  project: "project",
+  environment: "environment",
+  command: "command",
+  shell: "shell",
+  prerequisites: "prerequisites",
+  destructive: "destructive flag",
 }
 
 export type ActivityEvent = {

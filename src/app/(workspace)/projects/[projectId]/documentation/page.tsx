@@ -1,17 +1,21 @@
 import type { Metadata } from "next"
-import { BookOpen } from "lucide-react"
+import { Suspense } from "react"
 
-import { NotBuiltYet } from "@/components/shared/not-built-yet"
+import { Skeleton } from "@/components/ui/skeleton"
+import { KnowledgeView } from "@/features/knowledge/components/knowledge-view"
 
 export const metadata: Metadata = { title: "Documentation" }
 
-export default function Page() {
+/** A project's documents and commands (Spec FR-03 Documentation tab; Plan P6.4). */
+export default function ProjectDocumentationPage({
+  params,
+  searchParams,
+}: PageProps<"/projects/[projectId]/documentation">) {
   return (
-    <NotBuiltYet
-      icon={BookOpen}
-      title="No documents yet"
-      description="Setup guides, runbooks and saved commands for this project."
-      phase="Phase 6"
-    />
+    <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+      {params.then(({ projectId }) => (
+        <KnowledgeView searchParams={searchParams} projectId={projectId} />
+      ))}
+    </Suspense>
   )
 }

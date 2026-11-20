@@ -112,17 +112,26 @@ export const getProject = cache(async (projectId: string) => {
 export const getProjectCounts = cache(async (projectId: string) => {
   await requireUser()
   const supabase = await createClient()
-  const { data } = await supabase
-    .from("project_summaries")
-    .select("repository_count, technology_count, task_count, done_task_count, open_task_count")
-    .eq("id", projectId)
-    .maybeSingle()
+  const head = { count: "exact", head: true } as const
+  const [{ data }, environments, documents, commands] = await Promise.all([
+    supabase
+      .from("project_summaries")
+      .select("repository_count, technology_count, task_count, done_task_count, open_task_count")
+      .eq("id", projectId)
+      .maybeSingle(),
+    supabase.from("environments").select("id", head).eq("project_id", projectId),
+    supabase.from("documents").select("id", head).eq("project_id", projectId),
+    supabase.from("command_snippets").select("id", head).eq("project_id", projectId),
+  ])
   return {
     repositories: data?.repository_count ?? 0,
     technologies: data?.technology_count ?? 0,
     tasks: data?.task_count ?? 0,
     doneTasks: data?.done_task_count ?? 0,
     openTasks: data?.open_task_count ?? 0,
+    environments: environments.count ?? 0,
+    documents: documents.count ?? 0,
+    commands: commands.count ?? 0,
   }
 })
 

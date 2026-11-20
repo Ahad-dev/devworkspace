@@ -10,7 +10,9 @@ export type SecretFinding = { kind: string; message: string }
 const RULES: { kind: string; re: RegExp; message: string }[] = [
   {
     kind: "credential-url",
-    re: /\b[a-z][a-z0-9+.-]*:\/\/[^\s/?#@:]*:[^\s/?#@]+@/i,
+    // A placeholder in the password slot ($PGPASSWORD, ${DB_PASSWORD}, <password>, {password},
+    // %PASSWORD%, ****) is not a secret; a literal password is. Mirrors public.no_secret_text.
+    re: /\b[a-z][a-z0-9+.-]*:\/\/[^\s/?#@:]*:(?![$<{%*])[^\s/?#@]+@/i,
     message: "a URL with an embedded username and password",
   },
   {

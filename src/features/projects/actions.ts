@@ -134,10 +134,21 @@ export async function deleteProject(projectId: string): Promise<FormState> {
   if (!uuid.safeParse(projectId).success) return { status: "error", message: "Unknown project." }
   await requireUser()
   const supabase = await createClient()
+  // Document attachments cascade with the project; their files are removed deliberately after.
+  const { data: files } = await supabase
+    .from("document_attachments")
+    .select("storage_path, document:documents!inner(project_id)")
+    .eq("document.project_id", projectId)
   const { data, error } = await supabase.from("projects").delete().eq("id", projectId).select("id")
   if (error) return { status: "error", message: "Couldn't delete the project. Try again." }
   if (!data?.length) return { status: "error", message: "Project not found." }
+  const paths = (files ?? []).map((f) => f.storage_path)
+  if (paths.length) {
+    const { error: storageError } = await supabase.storage.from("attachments").remove(paths)
+    if (storageError) console.error("attachments: couldn't remove objects", { count: paths.length })
+  }
   revalidatePath("/projects")
+  revalidatePath("/knowledge", "layout")
   redirect("/projects")
 }
 

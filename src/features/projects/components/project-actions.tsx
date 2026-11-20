@@ -35,7 +35,14 @@ export function ProjectActions({
   projectId: string
   projectName: string
   archived: boolean
-  counts: { repositories: number; technologies: number; tasks?: number }
+  counts: {
+    repositories: number
+    technologies: number
+    tasks?: number
+    environments?: number
+    documents?: number
+    commands?: number
+  }
 }) {
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   const [pending, startTransition] = React.useTransition()
@@ -52,7 +59,15 @@ export function ProjectActions({
       `${counts.repositories} repositor${counts.repositories === 1 ? "y" : "ies"}`,
     counts.technologies &&
       `${counts.technologies} technolog${counts.technologies === 1 ? "y" : "ies"}`,
+    counts.environments &&
+      `${counts.environments} environment${counts.environments === 1 ? "" : "s"}`,
+    counts.documents && `${counts.documents} document${counts.documents === 1 ? "" : "s"}`,
+    counts.commands && `${counts.commands} command${counts.commands === 1 ? "" : "s"}`,
   ].filter(Boolean)
+  const childList =
+    children.length > 1
+      ? `${children.slice(0, -1).join(", ")} and ${children[children.length - 1]}`
+      : (children[0] ?? "")
 
   return (
     <div className="flex items-center gap-2">
@@ -101,8 +116,8 @@ export function ProjectActions({
             <AlertDialogTitle>Delete {projectName}?</AlertDialogTitle>
             <AlertDialogDescription>
               This permanently deletes the project
-              {children.length ? ` and its ${children.join(" and ")}` : ""}. It can&apos;t be
-              undone. Its activity history is kept as a deletion record.{" "}
+              {childList ? ` and its ${childList}` : ""}. It can&apos;t be undone. Its activity
+              history is kept as a deletion record.{" "}
               {!archived ? "To keep everything, archive it instead." : null}
             </AlertDialogDescription>
           </AlertDialogHeader>

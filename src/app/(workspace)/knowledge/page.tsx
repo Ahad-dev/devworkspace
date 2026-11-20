@@ -1,21 +1,23 @@
 import type { Metadata } from "next"
-import { BookOpen } from "lucide-react"
+import { Suspense } from "react"
 
-import { NotBuiltYet } from "@/components/shared/not-built-yet"
 import { PageContainer, PageHeader } from "@/components/shared/page-header"
+import { Skeleton } from "@/components/ui/skeleton"
+import { KnowledgeView } from "@/features/knowledge/components/knowledge-view"
 
 export const metadata: Metadata = { title: "Knowledge Base" }
 
-export default function Page() {
+/** Documents and commands across projects (Spec FR-10, FR-11; Plan P6.4). */
+export default function KnowledgePage({ searchParams }: PageProps<"/knowledge">) {
   return (
     <PageContainer>
-      <PageHeader title="Knowledge Base" description="Technical documents and saved commands." />
-      <NotBuiltYet
-        icon={BookOpen}
-        title="No documents or commands yet"
-        description="Markdown setup guides, runbooks and troubleshooting notes, plus a library of copyable commands."
-        phase="Phase 6 (P6.4–P6.6)"
+      <PageHeader
+        title="Knowledge Base"
+        description="Setup guides, runbooks, decisions and notes in Markdown, plus the commands you keep looking up. References and placeholders only, never secret values."
       />
+      <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+        <KnowledgeView searchParams={searchParams} />
+      </Suspense>
     </PageContainer>
   )
 }
