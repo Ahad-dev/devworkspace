@@ -1,4 +1,4 @@
-// TEMPORARY: Phase 2–4 tables were added by hand in the generator's format because `pnpm db:types`
+// TEMPORARY: Phase 2–5 tables were added by hand in the generator's format because `pnpm db:types`
 // couldn't reach the type endpoint with the current token. Regenerate with `pnpm db:types` and
 // delete this comment once the CLI token can generate types.
 export type Json =
@@ -554,6 +554,323 @@ export type Database = {
           },
         ]
       }
+      environments: {
+        Row: {
+          id: string
+          owner_id: string
+          created_at: string
+          updated_at: string
+          project_id: string
+          name: string
+          environment_type: Database["public"]["Enums"]["environment_type"]
+          machine_label: string | null
+          application_url: string | null
+          api_url: string | null
+          deployment_provider: string | null
+          server_hostname: string | null
+          operating_system: string | null
+          runtime_versions: Json
+          deployment_branch: string | null
+          deployment_method: string | null
+          status: Database["public"]["Enums"]["environment_status"]
+          notes: string | null
+          last_reviewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          project_id: string
+          name: string
+          environment_type: Database["public"]["Enums"]["environment_type"]
+          machine_label?: string | null
+          application_url?: string | null
+          api_url?: string | null
+          deployment_provider?: string | null
+          server_hostname?: string | null
+          operating_system?: string | null
+          runtime_versions?: Json
+          deployment_branch?: string | null
+          deployment_method?: string | null
+          status?: Database["public"]["Enums"]["environment_status"]
+          notes?: string | null
+          last_reviewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          project_id?: string
+          name?: string
+          environment_type?: Database["public"]["Enums"]["environment_type"]
+          machine_label?: string | null
+          application_url?: string | null
+          api_url?: string | null
+          deployment_provider?: string | null
+          server_hostname?: string | null
+          operating_system?: string | null
+          runtime_versions?: Json
+          deployment_branch?: string | null
+          deployment_method?: string | null
+          status?: Database["public"]["Enums"]["environment_status"]
+          notes?: string | null
+          last_reviewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "environments_project_owner_fkey"
+            columns: ["project_id","owner_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id","owner_id"]
+          },
+        ]
+      }
+      environment_variables: {
+        Row: {
+          id: string
+          owner_id: string
+          created_at: string
+          updated_at: string
+          project_id: string
+          environment_id: string
+          name: string
+          is_required: boolean
+          is_sensitive: boolean
+          configuration_status: Database["public"]["Enums"]["configuration_status"]
+          verification_method: Database["public"]["Enums"]["verification_method"]
+          last_verified_at: string | null
+          notes: string | null
+          secret_reference_id: string | null
+        }
+        Insert: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          project_id: string
+          environment_id: string
+          name: string
+          is_required?: boolean
+          is_sensitive?: boolean
+          configuration_status?: Database["public"]["Enums"]["configuration_status"]
+          verification_method?: Database["public"]["Enums"]["verification_method"]
+          last_verified_at?: string | null
+          notes?: string | null
+          secret_reference_id?: string | null
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          project_id?: string
+          environment_id?: string
+          name?: string
+          is_required?: boolean
+          is_sensitive?: boolean
+          configuration_status?: Database["public"]["Enums"]["configuration_status"]
+          verification_method?: Database["public"]["Enums"]["verification_method"]
+          last_verified_at?: string | null
+          notes?: string | null
+          secret_reference_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "environment_variables_environment_project_fkey"
+            columns: ["environment_id","project_id"]
+            isOneToOne: false
+            referencedRelation: "environments"
+            referencedColumns: ["id","project_id"]
+          },
+          {
+            foreignKeyName: "environment_variables_project_owner_fkey"
+            columns: ["project_id","owner_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id","owner_id"]
+          },
+          {
+            foreignKeyName: "environment_variables_secret_reference_fkey"
+            columns: ["secret_reference_id","owner_id"]
+            isOneToOne: false
+            referencedRelation: "secret_references"
+            referencedColumns: ["id","owner_id"]
+          },
+        ]
+      }
+      project_services: {
+        Row: {
+          id: string
+          owner_id: string
+          created_at: string
+          updated_at: string
+          project_id: string
+          name: string
+          category: Database["public"]["Enums"]["service_category"]
+          provider: string | null
+          purpose: string | null
+          dashboard_url: string | null
+          documentation_url: string | null
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          project_id: string
+          name: string
+          category?: Database["public"]["Enums"]["service_category"]
+          provider?: string | null
+          purpose?: string | null
+          dashboard_url?: string | null
+          documentation_url?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          project_id?: string
+          name?: string
+          category?: Database["public"]["Enums"]["service_category"]
+          provider?: string | null
+          purpose?: string | null
+          dashboard_url?: string | null
+          documentation_url?: string | null
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_services_project_owner_fkey"
+            columns: ["project_id","owner_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id","owner_id"]
+          },
+        ]
+      }
+      secret_references: {
+        Row: {
+          id: string
+          owner_id: string
+          created_at: string
+          updated_at: string
+          provider: string
+          vault_project_or_workspace: string | null
+          vault_path_or_item_id: string
+          key_name: string | null
+          vault_url: string | null
+        }
+        Insert: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          provider: string
+          vault_project_or_workspace?: string | null
+          vault_path_or_item_id: string
+          key_name?: string | null
+          vault_url?: string | null
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          provider?: string
+          vault_project_or_workspace?: string | null
+          vault_path_or_item_id?: string
+          key_name?: string | null
+          vault_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secret_references_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_instances: {
+        Row: {
+          id: string
+          owner_id: string
+          created_at: string
+          updated_at: string
+          project_id: string
+          project_service_id: string
+          environment_id: string
+          resource_name: string | null
+          region: string | null
+          endpoint_hostname: string | null
+          version_or_plan: string | null
+          status: Database["public"]["Enums"]["service_instance_status"]
+          related_variables: string[]
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          project_id: string
+          project_service_id: string
+          environment_id: string
+          resource_name?: string | null
+          region?: string | null
+          endpoint_hostname?: string | null
+          version_or_plan?: string | null
+          status?: Database["public"]["Enums"]["service_instance_status"]
+          related_variables?: string[]
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+          project_id?: string
+          project_service_id?: string
+          environment_id?: string
+          resource_name?: string | null
+          region?: string | null
+          endpoint_hostname?: string | null
+          version_or_plan?: string | null
+          status?: Database["public"]["Enums"]["service_instance_status"]
+          related_variables?: string[]
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_instances_environment_project_fkey"
+            columns: ["environment_id","project_id"]
+            isOneToOne: false
+            referencedRelation: "environments"
+            referencedColumns: ["id","project_id"]
+          },
+          {
+            foreignKeyName: "service_instances_project_owner_fkey"
+            columns: ["project_id","owner_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id","owner_id"]
+          },
+          {
+            foreignKeyName: "service_instances_service_project_fkey"
+            columns: ["project_service_id","project_id"]
+            isOneToOne: false
+            referencedRelation: "project_services"
+            referencedColumns: ["id","project_id"]
+          },
+        ]
+      }
       work_handoffs: {
         Row: {
           completed_summary: string | null
@@ -703,6 +1020,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "work_sessions_environment_project_fkey"
+            columns: ["environment_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "environments"
+            referencedColumns: ["id", "project_id"]
+          },
           {
             foreignKeyName: "work_sessions_project_owner_fkey"
             columns: ["project_id", "owner_id"]
@@ -870,6 +1194,23 @@ export type Database = {
         | "session.resumed"
         | "session.completed"
         | "handoff.saved"
+        | "environment.created"
+        | "environment.updated"
+        | "environment.archived"
+        | "environment.restored"
+        | "environment.reviewed"
+        | "environment.deleted"
+        | "service.added"
+        | "service.updated"
+        | "service.removed"
+        | "service_instance.added"
+        | "service_instance.updated"
+        | "service_instance.removed"
+        | "variable.added"
+        | "variable.updated"
+        | "variable.removed"
+        | "secret_reference.added"
+        | "secret_reference.removed"
       priority_level:
         | "urgent"
         | "high"
@@ -902,6 +1243,12 @@ export type Database = {
         | "docs"
         | "monorepo"
         | "other"
+      configuration_status: "unknown" | "configured" | "missing" | "not_applicable"
+      environment_status: "active" | "inactive" | "needs_review" | "archived"
+      environment_type: "local" | "development" | "staging" | "production" | "custom"
+      service_category: "database" | "cache" | "hosting" | "storage" | "auth" | "payments" | "email" | "monitoring" | "search" | "queue" | "analytics" | "external_api" | "dns" | "other"
+      service_instance_status: "active" | "inactive" | "maintenance" | "unknown"
+      verification_method: "manual" | "imported" | "integration"
       session_status: "active" | "paused" | "completed"
       technology_category:
         | "frontend"
@@ -1075,6 +1422,23 @@ export const Constants = {
         "session.resumed",
         "session.completed",
         "handoff.saved",
+        "environment.created",
+        "environment.updated",
+        "environment.archived",
+        "environment.restored",
+        "environment.reviewed",
+        "environment.deleted",
+        "service.added",
+        "service.updated",
+        "service.removed",
+        "service_instance.added",
+        "service_instance.updated",
+        "service_instance.removed",
+        "variable.added",
+        "variable.updated",
+        "variable.removed",
+        "secret_reference.added",
+        "secret_reference.removed",
       ],
       priority_level: [
         "urgent",
@@ -1113,6 +1477,12 @@ export const Constants = {
         "monorepo",
         "other",
       ],
+      configuration_status: ["unknown", "configured", "missing", "not_applicable"],
+      environment_status: ["active", "inactive", "needs_review", "archived"],
+      environment_type: ["local", "development", "staging", "production", "custom"],
+      service_category: ["database", "cache", "hosting", "storage", "auth", "payments", "email", "monitoring", "search", "queue", "analytics", "external_api", "dns", "other"],
+      service_instance_status: ["active", "inactive", "maintenance", "unknown"],
+      verification_method: ["manual", "imported", "integration"],
       session_status: ["active", "paused", "completed"],
       technology_category: [
         "frontend",

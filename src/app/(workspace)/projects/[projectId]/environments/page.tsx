@@ -1,17 +1,73 @@
 import type { Metadata } from "next"
-import { Server } from "lucide-react"
+import { Suspense } from "react"
+import Link from "next/link"
+import { GitCompareArrows } from "lucide-react"
 
-import { NotBuiltYet } from "@/components/shared/not-built-yet"
+import { buttonVariants } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { CreateEnvironmentDialog } from "@/features/environments/components/create-environment-dialog"
+import { EnvironmentFilters } from "@/features/environments/components/environment-filters"
+import { EnvironmentsTable } from "@/features/environments/components/environments-table"
+import { listEnvironments, parseEnvironmentFilters } from "@/features/environments/queries"
+import { getProject } from "@/features/projects/queries"
+import { requestTime } from "@/lib/request-time"
 
 export const metadata: Metadata = { title: "Environments" }
 
-export default function Page() {
+/** Project Environments tab (Plan P5.4). */
+export default function ProjectEnvironmentsPage({
+  params,
+  searchParams,
+}: PageProps<"/projects/[projectId]/environments">) {
   return (
-    <NotBuiltYet
-      icon={Server}
-      title="No environments yet"
-      description="Local, development, staging and production details for this project."
-      phase="Phase 5"
-    />
+    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+      {params.then(({ projectId }) => (
+        <ProjectEnvironments projectId={projectId} searchParams={searchParams} />
+      ))}
+    </Suspense>
+  )
+}
+
+async function ProjectEnvironments({
+  projectId,
+  searchParams,
+}: {
+  projectId: string
+  searchParams: PageProps<"/projects/[projectId]/environments">["searchParams"]
+}) {
+  const project = await getProject(projectId)
+  const filters = parseEnvironmentFilters(await searchParams)
+  const [rows, renderedAt] = await Promise.all([
+    listEnvironments(filters, { projectId: project.id }),
+    requestTime(),
+  ])
+  const archived = project.status === "archived"
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-base font-semibold">Environments</h2>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/environments/compare?project=${project.id}`}
+            className={buttonVariants({ size: "sm", variant: "outline" })}
+          >
+            <GitCompareArrows />
+            Compare
+          </Link>
+          {!archived ? <CreateEnvironmentDialog projectId={project.id} /> : null}
+        </div>
+      </div>
+      <Suspense fallback={<Skeleton className="h-9 w-full max-w-2xl" />}>
+        <EnvironmentFilters />
+      </Suspense>
+      <EnvironmentsTable
+        rows={rows}
+        filters={filters}
+        showProject={false}
+        renderedAt={renderedAt}
+        emptyAction={!archived ? <CreateEnvironmentDialog projectId={project.id} /> : undefined}
+      />
+    </div>
   )
 }

@@ -323,3 +323,111 @@ export const LABEL_COLOR_META: Record<LabelColor, { chip: string; dot: string }>
 export function labelColor(value: string): LabelColor {
   return (LABEL_COLORS as readonly string[]).includes(value) ? (value as LabelColor) : "gray"
 }
+
+/* ------------------------------------------------------------------ */
+/* Environments, services, configuration (Spec FR-08/FR-09; M12–M14)   */
+/* ------------------------------------------------------------------ */
+
+export const ENVIRONMENT_STATUSES = ["active", "inactive", "needs_review", "archived"] as const
+export type EnvironmentStatus = (typeof ENVIRONMENT_STATUSES)[number]
+export const EDITABLE_ENVIRONMENT_STATUSES = ["active", "inactive", "needs_review"] as const
+
+export const ENVIRONMENT_STATUS_META: Record<
+  EnvironmentStatus,
+  { label: string; className: string }
+> = {
+  active: { label: "Active", className: "text-status-done bg-status-done/10 ring-status-done/25" },
+  inactive: { label: "Inactive", className: "text-muted-foreground bg-muted ring-border" },
+  needs_review: {
+    label: "Needs review",
+    className: "text-status-in-progress bg-status-in-progress/10 ring-status-in-progress/30",
+  },
+  archived: { label: "Archived", className: "text-muted-foreground bg-muted ring-border" },
+}
+
+export const SERVICE_CATEGORIES = [
+  "database",
+  "cache",
+  "hosting",
+  "storage",
+  "auth",
+  "payments",
+  "email",
+  "monitoring",
+  "search",
+  "queue",
+  "analytics",
+  "external_api",
+  "dns",
+  "other",
+] as const
+export type ServiceCategory = (typeof SERVICE_CATEGORIES)[number]
+export const SERVICE_CATEGORY_LABELS: Record<ServiceCategory, string> = {
+  database: "Database",
+  cache: "Cache",
+  hosting: "Hosting / compute",
+  storage: "Storage / CDN",
+  auth: "Authentication",
+  payments: "Payments",
+  email: "Email / messaging",
+  monitoring: "Monitoring / errors",
+  search: "Search",
+  queue: "Queue / background jobs",
+  analytics: "Analytics",
+  external_api: "External API",
+  dns: "DNS / domain",
+  other: "Other",
+}
+
+export const SERVICE_INSTANCE_STATUSES = ["active", "inactive", "maintenance", "unknown"] as const
+export type ServiceInstanceStatus = (typeof SERVICE_INSTANCE_STATUSES)[number]
+export const SERVICE_INSTANCE_STATUS_META: Record<
+  ServiceInstanceStatus,
+  { label: string; className: string }
+> = {
+  active: { label: "Active", className: "text-status-done bg-status-done/10 ring-status-done/25" },
+  inactive: { label: "Inactive", className: "text-muted-foreground bg-muted ring-border" },
+  maintenance: {
+    label: "Maintenance",
+    className: "text-status-in-progress bg-status-in-progress/10 ring-status-in-progress/30",
+  },
+  unknown: { label: "Unknown", className: "text-muted-foreground bg-muted/60 ring-border" },
+}
+
+export const CONFIGURATION_STATUSES = [
+  "unknown",
+  "configured",
+  "missing",
+  "not_applicable",
+] as const
+export type ConfigurationStatus = (typeof CONFIGURATION_STATUSES)[number]
+export const CONFIGURATION_STATUS_META: Record<
+  ConfigurationStatus,
+  { label: string; className: string }
+> = {
+  configured: {
+    label: "Configured",
+    className: "text-status-done bg-status-done/10 ring-status-done/25",
+  },
+  missing: {
+    label: "Missing",
+    className: "text-status-blocked bg-status-blocked/10 ring-status-blocked/25",
+  },
+  unknown: { label: "Unknown", className: "text-muted-foreground bg-muted/60 ring-border" },
+  not_applicable: {
+    label: "Not applicable",
+    className: "text-muted-foreground bg-muted ring-border",
+  },
+}
+
+/** Configuration status honesty (Spec FR-08): how a status was established. */
+export const VERIFICATION_METHODS = ["manual", "imported", "integration"] as const
+export type VerificationMethod = (typeof VERIFICATION_METHODS)[number]
+export const VERIFICATION_METHOD_LABELS: Record<VerificationMethod, string> = {
+  manual: "Manually confirmed",
+  imported: "Imported",
+  integration: "Integration verified",
+}
+
+/** Suggestions for the free-text vault provider (Plan §9 decision 4: none chosen). */
+export const SECRET_PROVIDERS = ["Infisical", "Doppler", "1Password", "Other"] as const
