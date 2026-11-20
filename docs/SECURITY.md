@@ -76,6 +76,13 @@ How this is enforced:
   attach to the owner's rows. A new table without an audit entry fails it.
 - `pnpm supabase db lint --remote` is clean. The Security and Performance Advisors need a dashboard
   check (the CLI token can't read them).
+- The one-off owner import (`scripts/import-projects.mts`, Plan §10) uses only the public URL and
+  publishable key from `.env.local` (it refuses a `sb_secret_` key) plus the owner's own sign-in, typed
+  hidden in their terminal and never stored or logged. Every row goes through RLS and the column grants;
+  it never sends `owner_id`. Before any write it validates the whole file and runs the secret guard on
+  every string and every document line, reporting only the path or `file:line` and the kind of finding.
+  Variables are imported by name only. The data file and copied documents live in the gitignored
+  `imports/` folder.
 
 ## 7. Reporting
 

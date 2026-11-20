@@ -59,18 +59,20 @@ Authentication → Users → Add user.
 
 ## Scripts
 
-| Script                              | What it does                                                           |
-| ----------------------------------- | ---------------------------------------------------------------------- |
-| `pnpm dev`                          | Dev server                                                             |
-| `pnpm build` / `pnpm start`         | Production build / serve                                               |
-| `pnpm lint`                         | ESLint                                                                 |
-| `pnpm typecheck`                    | Route types + `tsc --noEmit`                                           |
-| `pnpm format` / `pnpm format:check` | Prettier write / check                                                 |
-| `pnpm db:new <name>`                | New SQL migration in `supabase/migrations/`                            |
-| `pnpm db:push`                      | Apply pending migrations to the **linked** project                     |
-| `pnpm db:types`                     | Regenerate `src/types/database.types.ts`                               |
-| `pnpm supabase <args>`              | Any Supabase CLI command                                               |
-| `node scripts/seed-dev.mts`         | Busy sample workspace for a throwaway dev user (`--delete` removes it) |
+| Script                                                              | What it does                                                                                                                                                                         |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm dev`                                                          | Dev server                                                                                                                                                                           |
+| `pnpm build` / `pnpm start`                                         | Production build / serve                                                                                                                                                             |
+| `pnpm lint`                                                         | ESLint                                                                                                                                                                               |
+| `pnpm typecheck`                                                    | Route types + `tsc --noEmit`                                                                                                                                                         |
+| `pnpm format` / `pnpm format:check`                                 | Prettier write / check                                                                                                                                                               |
+| `pnpm db:new <name>`                                                | New SQL migration in `supabase/migrations/`                                                                                                                                          |
+| `pnpm db:push`                                                      | Apply pending migrations to the **linked** project                                                                                                                                   |
+| `pnpm db:types`                                                     | Regenerate `src/types/database.types.ts`                                                                                                                                             |
+| `pnpm supabase <args>`                                              | Any Supabase CLI command                                                                                                                                                             |
+| `node scripts/seed-dev.mts`                                         | Busy sample workspace for a throwaway dev user (`--delete` removes it)                                                                                                               |
+| `node scripts/import-projects.mts <file> [--dry-run] [--only keys]` | One-off owner import of real projects from a reviewed data file (gitignored `imports/`). Signs in as the owner with a hidden password prompt; `--dry-run` only validates and screens |
+| `node scripts/import-rehearse.mts <file> [--keep]`                  | Runs that import against a throwaway user, checks it, re-runs it (all skipped), deletes the user (`--delete` removes a kept one)                                                     |
 
 ## Testing
 

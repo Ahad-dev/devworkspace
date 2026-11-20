@@ -19,7 +19,10 @@ Next.js agent rules (this Next version differs from older training data): @AGENT
 - Never run `supabase db reset` against the hosted project: it would wipe production. Restore drills go into a
   temporary scratch project (`docs/OPERATIONS.md` §4).
 - Tests and scripts only ever touch throwaway users (`test-*@devworkspace.test`) that they create and delete;
-  never the owner's account or data.
+  never the owner's account or data. One exception: `scripts/import-projects.mts`, which only the owner runs,
+  signing in with their own password in their own terminal.
+- Claude never asks for, types or reads the owner's password. For the import, Claude may run `--dry-run` and
+  `scripts/import-rehearse.mts` (throwaway user) only.
 
 ## Stack
 

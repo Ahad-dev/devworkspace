@@ -49,3 +49,7 @@ Thumbs.db
 
 # database dumps hold personal data (docs/OPERATIONS.md §3)
 backups/
+
+# owner project import (scripts/import-projects.mts): real project metadata and copied docs
+/imports/
+.import-rehearsal-user.json

@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "key": "alpha",
+      "name": "Import Fixture Alpha",
+      "project_type": "client",
+      "status": "active",
+      "priority": "high",
+      "description": "A client app with a web front end and an API.",
+      "start_date": "2026-01-15",
+      "project_url": "https://alpha.example.com",
+      "repositories": [
+        {
+          "key": "api",
+          "name": "alpha-api",
+          "provider": "github",
+          "purpose": "backend",
+          "remote_url": "https://github.com/example/alpha-api.git",
+          "default_branch": "main",
+          "primary_language": "TypeScript",
+          "local_path": "D:\\Code\\alpha\\alpha-api"
+        },
+        {
+          "key": "web",
+          "name": "alpha-web",
+          "purpose": "frontend",
+          "remote_url": "git@github.com:example/alpha-web.git",
+          "default_branch": "main"
+        }
+      ],
+      "technologies": [
+        { "name": "NestJS", "category": "backend", "version": "11", "repo": "api" },
+        { "name": "Next.js", "category": "frontend", "version": "16.2", "repo": "web" },
+        { "name": "PostgreSQL", "category": "database", "version": "17" }
+      ],
+      "environments": [
+        {
+          "key": "local",
+          "name": "Local",
+          "environment_type": "local",
+          "application_url": "http://localhost:3001",
+          "api_url": "http://localhost:3000/v1",
+          "runtime_versions": { "node": "22" },
+          "variable_status": "configured",
+          "variables": [
+            "DATABASE_URL",
+            "JWT_SECRET",
+            "PORT",
+            { "name": "NEXT_PUBLIC_API_URL", "required": false },
+            { "name": "SENTRY_DSN", "status": "unknown", "notes": "Only read by the code." }
+          ]
+        },
+        {
+          "key": "prod",
+          "name": "Production",
+          "environment_type": "production",
+          "status": "needs_review",
+          "application_url": "https://app.alpha.example.com",
+          "deployment_provider": "Hetzner VPS",
+          "server_hostname": "api.alpha.example.com",
+          "deployment_branch": "main",
+          "deployment_method": "Docker Compose behind Caddy.",
+          "variables": ["DATABASE_URL", "JWT_SECRET", "PORT"]
+        }
+      ],
+      "services": [
+        {
+          "key": "db",
+          "name": "PostgreSQL",
+          "category": "database",
+          "provider": "Docker",
+          "instances": [
+            {
+              "env": "local",
+              "status": "active",
+              "endpoint_hostname": "localhost:5433",
+              "related_variables": ["DATABASE_URL"]
+            },
+            { "env": "prod", "status": "unknown", "related_variables": ["DATABASE_URL"] }
+          ]
+        },
+        {
+          "key": "errors",
+          "name": "Sentry",
+          "category": "monitoring",
+          "dashboard_url": "https://sentry.io"
+        }
+      ],
+      "tasks": [
+        {
+          "title": "Rotate the webhook secret",
+          "priority": "urgent",
+          "next_action": "Open the provider dashboard."
+        },
+        { "title": "Write the deploy runbook", "status": "inbox", "repo": "api" }
+      ],
+      "documents": [
+        {
+          "title": "Runbook",
+          "category": "deployment",
+          "summary": "How to deploy.",
+          "file": "runbook.md",
+          "env": "prod"
+        },
+        { "title": "Notes", "content": "# Notes\n\nInline content." }
+      ],
+      "commands": [
+        {
+          "title": "Start the API",
+          "command": "npm run start:dev",
+          "category": "development",
+          "repo": "api",
+          "env": "local"
+        },
+        {
+          "title": "Apply migrations",
+          "command": "npx prisma migrate deploy",
+          "category": "database",
+          "prerequisites": "Never run prisma migrate dev against a shared database.",
+          "repo": "api"
+        },
+        {
+          "title": "Reset local volumes",
+          "command": "docker compose down -v",
+          "shell": "powershell",
+          "os": "windows",
+          "category": "maintenance",
+          "destructive": true,
+          "env": "local"
+        }
+      ]
+    },
+    {
+      "key": "beta",
+      "name": "Import Fixture Beta",
+      "project_type": "learning",
+      "repositories": [],
+      "environments": [{ "key": "local", "name": "Local", "environment_type": "local" }],
+      "commands": [{ "title": "Run tests", "command": "pnpm test", "category": "test" }]
+    }
+  ]
+}
