@@ -29,6 +29,8 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
+import Link from "next/link"
+
 import { formatDateTime, formatRelative } from "@/lib/format"
 import type { Database } from "@/types/database.types"
 
@@ -155,6 +157,9 @@ export type ActivityEvent = {
   summary: string
   metadata: unknown
   created_at: string
+  /** Embedded on cross-project feeds, so each entry links to where it happened. */
+  project?: { id: string; name: string } | null
+  task?: { id: string; title: string } | null
 }
 
 function changedFields(metadata: unknown) {
@@ -163,7 +168,19 @@ function changedFields(metadata: unknown) {
   return changed.map((f) => FIELD_LABELS[String(f)] ?? String(f)).join(", ")
 }
 
-export function ActivityList({ events, timeZone }: { events: ActivityEvent[]; timeZone: string }) {
+export function ActivityList({
+  events,
+  timeZone,
+  showContext = false,
+  now,
+}: {
+  events: ActivityEvent[]
+  timeZone: string
+  /** Show the project and task each entry belongs to (global feed and dashboard). */
+  showContext?: boolean
+  /** Request time, for relative times that match the server render. */
+  now?: number
+}) {
   if (events.length === 0) {
     return <p className="text-sm text-muted-foreground">No activity yet.</p>
   }
@@ -179,15 +196,35 @@ export function ActivityList({ events, timeZone }: { events: ActivityEvent[]; ti
             </span>
             <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
               <p className="min-w-0 text-sm">
-                {e.summary}
+                {/* Task summaries already name the task, so the summary itself links to it. */}
+                {showContext && e.task ? (
+                  <Link href={`/tasks/${e.task.id}`} className="underline-offset-4 hover:underline">
+                    {e.summary}
+                  </Link>
+                ) : (
+                  e.summary
+                )}
                 {fields ? <span className="text-muted-foreground"> · {fields}</span> : null}
+                {showContext && e.project ? (
+                  <span className="text-muted-foreground">
+                    {" · "}
+                    {e.project ? (
+                      <Link
+                        href={`/projects/${e.project.id}`}
+                        className="underline-offset-4 hover:text-foreground hover:underline"
+                      >
+                        {e.project.name}
+                      </Link>
+                    ) : null}
+                  </span>
+                ) : null}
               </p>
               <time
                 dateTime={e.created_at}
                 title={formatDateTime(e.created_at, timeZone) ?? undefined}
                 className="shrink-0 text-xs whitespace-nowrap text-muted-foreground"
               >
-                {formatRelative(e.created_at)}
+                {formatRelative(e.created_at, now === undefined ? undefined : new Date(now))}
               </time>
             </div>
           </li>

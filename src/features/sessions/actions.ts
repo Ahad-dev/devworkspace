@@ -220,3 +220,29 @@ export async function updateSessionDetails(
   revalidateAll()
   return { status: "success", message: "Session details saved." }
 }
+
+/* Quick-create --------------------------------------------------------------- */
+
+/** Open tasks to start a session on (Plan P7.3), work in progress first. */
+export async function loadStartableTasks(): Promise<
+  { id: string; title: string; status: string; projectName: string }[]
+> {
+  await requireUser()
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("tasks")
+    .select("id, title, status, updated_at, project:projects(name)")
+    .in("status", ["in_progress", "ready", "review", "blocked", "inbox"])
+    .is("archived_at", null)
+    .order("updated_at", { ascending: false })
+    .limit(200)
+  const rank: Record<string, number> = { in_progress: 0, ready: 1, review: 2, blocked: 3, inbox: 4 }
+  return (data ?? [])
+    .map((t) => ({
+      id: t.id,
+      title: t.title,
+      status: t.status,
+      projectName: t.project?.name ?? "",
+    }))
+    .sort((a, b) => (rank[a.status] ?? 9) - (rank[b.status] ?? 9))
+}

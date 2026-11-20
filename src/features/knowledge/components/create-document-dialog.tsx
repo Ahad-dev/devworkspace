@@ -35,14 +35,22 @@ export function CreateDocumentDialog({
   projectId,
   projects,
   defaultProjectId,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   /** Inside a project: the document belongs to it. */
   projectId?: string
   /** On the global page: projects to choose from. */
   projects?: { id: string; name: string }[]
   defaultProjectId?: string | null
+  /** Controlled (quick-create): no trigger button is rendered. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }) {
-  const [open, setOpen] = React.useState(false)
+  const [internalOpen, setInternalOpen] = React.useState(false)
+  const controlled = controlledOpen !== undefined
+  const open = controlled ? controlledOpen : internalOpen
+  const setOpen = controlled ? (onOpenChange ?? (() => {})) : setInternalOpen
   const [title, setTitle] = React.useState("")
   const [category, setCategory] = React.useState("general")
   const [project, setProject] = React.useState(defaultProjectId ?? NONE)
@@ -53,12 +61,14 @@ export function CreateDocumentDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus />
-          New document
-        </Button>
-      </DialogTrigger>
+      {!controlled ? (
+        <DialogTrigger asChild>
+          <Button size="sm">
+            <Plus />
+            New document
+          </Button>
+        </DialogTrigger>
+      ) : null}
       <DialogContent className="sm:max-w-md">
         {/* Redirecting action: submitted through the form action. */}
         <form action={formAction} className="flex flex-col gap-6" noValidate>

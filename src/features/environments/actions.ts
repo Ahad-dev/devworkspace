@@ -83,6 +83,17 @@ async function environmentProject(environmentId: string) {
 
 /* Environments ----------------------------------------------------------------- */
 
+/** Quick-create (Plan P7.3): the project is picked on the form instead of bound by the page. */
+export async function createEnvironmentFromForm(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const projectId = text(formData, "project_id")
+  if (!isUuid(projectId))
+    return { status: "error", fieldErrors: { project_id: ["Choose a project"] } }
+  return createEnvironment(projectId, _prev, formData)
+}
+
 export async function createEnvironment(
   projectId: string,
   _prev: FormState,

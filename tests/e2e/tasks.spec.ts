@@ -24,6 +24,19 @@ async function moveWithMenu(page: Page, title: string, to: string) {
   await page.getByRole("menuitemradio", { name: to, exact: true }).click()
 }
 
+/**
+ * A list move, waiting until the server has saved it. The list has no optimistic rows, but a
+ * re-render can briefly hide them, and navigating away mid-request aborts the save.
+ */
+async function moveAndSave(page: Page, title: string, to: string) {
+  const saved = page.waitForResponse(
+    (r) => r.request().method() === "POST" && "next-action" in r.request().headers(),
+    { timeout: 30_000 },
+  )
+  await moveWithMenu(page, title, to)
+  await saved
+}
+
 /** Wait until the board's optimistic move has been saved (or rolled back). */
 async function boardSettled(page: Page) {
   await expect(page.locator('[data-slot="task-board"]')).toHaveAttribute("aria-busy", "false", {
@@ -130,13 +143,13 @@ test("task lifecycle: capture, full form, board and list moves, blocked details"
 
   // List: finish it, then it leaves the open queue and shows under Completed.
   await page.goto(`/projects/${projectId}/tasks`)
-  await moveWithMenu(page, quickTitle, "Done")
+  await moveAndSave(page, quickTitle, "Done")
   await expect(page.getByRole("link", { name: quickTitle })).toHaveCount(0, { timeout: 30_000 })
   await page.getByRole("button", { name: "Completed" }).click()
   await expect(page.getByRole("link", { name: quickTitle })).toBeVisible({ timeout: 30_000 })
 
   // Reopen from the list back to Ready.
-  await moveWithMenu(page, quickTitle, "Ready")
+  await moveAndSave(page, quickTitle, "Ready")
   await expect(page.getByRole("link", { name: quickTitle })).toHaveCount(0, { timeout: 30_000 })
 
   // My Work shows tasks across projects.

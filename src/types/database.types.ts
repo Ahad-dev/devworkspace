@@ -1,4 +1,4 @@
-// TEMPORARY: Phase 2–6 tables were added by hand in the generator's format because `pnpm db:types`
+// TEMPORARY: Phase 2–7 tables were added by hand in the generator's format because `pnpm db:types`
 // couldn't reach the type endpoint with the current token. Regenerate with `pnpm db:types` and
 // delete this comment once the CLI token can generate types.
 export type Json =
@@ -68,6 +68,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_events_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -525,6 +532,7 @@ export type Database = {
           status: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at: string
+          search_vector: unknown
         }
         Insert: {
           archived_at?: string | null
@@ -545,6 +553,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at?: string
+          search_vector?: never
         }
         Update: {
           archived_at?: string | null
@@ -565,6 +574,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["task_status"]
           title?: string
           updated_at?: string
+          search_vector?: never
         }
         Relationships: [
           {
@@ -1358,6 +1368,34 @@ export type Database = {
           p_update_task_next_action?: boolean
         }
         Returns: string
+      }
+      dashboard_summary: {
+        Args: never
+        Returns: {
+          active_projects: number
+          blocked: number
+          environments_needing_review: number
+          in_progress: number
+          inbox: number
+          missing_next_action: number
+          overdue: number
+          ready: number
+          review: number
+        }[]
+      }
+      global_search: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          excerpt: string | null
+          id: string
+          kind: string
+          meta: string | null
+          parent_id: string | null
+          project_id: string | null
+          project_name: string | null
+          rank: number
+          title: string
+        }[]
       }
       pause_work_session: {
         Args: {

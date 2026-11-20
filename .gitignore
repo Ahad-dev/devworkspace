@@ -43,3 +43,6 @@ Thumbs.db
 
 # standalone tools (e.g. Supabase CLI binary)
 .tools/
+
+# sample-data user from scripts/seed-dev.mts (dev only)
+.seed-dev-user.json
