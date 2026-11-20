@@ -20,6 +20,7 @@
     "db:types": "node scripts/supabase.mjs --types-out src/types/database.types.ts gen types typescript --remote --schema public"
   },
   "dependencies": {
+    "@dnd-kit/core": "6.3.1",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.119.2",
     "class-variance-authority": "^0.7.1",

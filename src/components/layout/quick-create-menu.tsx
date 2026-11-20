@@ -14,13 +14,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CreateProjectDialog } from "@/features/projects/components/create-project-dialog"
+import { loadProjectOptions } from "@/features/tasks/actions"
+import { QuickTaskDialog } from "@/features/tasks/components/quick-task-dialog"
 
 /**
  * Quick-create (Spec §3.1, FR-02). Each entry is wired up in the phase that builds its feature;
  * until then it is shown disabled with the phase it arrives in.
  */
 const LATER = [
-  { label: "Task", icon: ListPlus, phase: "P3" },
   { label: "Work session", icon: Timer, phase: "P4" },
   { label: "Environment", icon: Server, phase: "P5" },
   { label: "Document", icon: BookOpen, phase: "P6" },
@@ -30,6 +31,10 @@ export function QuickCreateMenu() {
   const [projectOpen, setProjectOpen] = React.useState(false)
   // Remount the dialog per open so a previous error doesn't linger.
   const [projectKey, setProjectKey] = React.useState(0)
+  const [taskOpen, setTaskOpen] = React.useState(false)
+  const [taskKey, setTaskKey] = React.useState(0)
+  // Loaded when the dialog opens, so the header stays in the static shell.
+  const [projects, setProjects] = React.useState<Promise<{ id: string; name: string }[]>>()
 
   return (
     <>
@@ -52,6 +57,16 @@ export function QuickCreateMenu() {
             <FolderPlus />
             Project
           </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => {
+              setProjects(loadProjectOptions())
+              setTaskKey((k) => k + 1)
+              setTaskOpen(true)
+            }}
+          >
+            <ListPlus />
+            Task
+          </DropdownMenuItem>
           {LATER.map((item) => (
             <DropdownMenuItem key={item.label} disabled>
               <item.icon />
@@ -62,6 +77,14 @@ export function QuickCreateMenu() {
         </DropdownMenuContent>
       </DropdownMenu>
       <CreateProjectDialog key={projectKey} open={projectOpen} onOpenChange={setProjectOpen} />
+      {projects ? (
+        <QuickTaskDialog
+          key={taskKey}
+          projects={projects}
+          open={taskOpen}
+          onOpenChange={setTaskOpen}
+        />
+      ) : null}
     </>
   )
 }

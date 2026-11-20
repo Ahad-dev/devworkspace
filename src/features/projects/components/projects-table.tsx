@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatRelative } from "@/lib/format"
+import { formatRelative, taskProgress } from "@/lib/format"
 import type { ProjectListFilters, listProjects } from "../queries"
 import { ProjectStatusBadge, projectTypeLabel } from "./project-badges"
 import { CreateProjectDialog } from "./create-project-dialog"
@@ -66,6 +66,7 @@ export function ProjectsTable({ rows, filters }: { rows: Rows; filters: ProjectL
             <TableHead className="hidden sm:table-cell">Type</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="hidden md:table-cell">Priority</TableHead>
+            <TableHead className="hidden text-right md:table-cell">Tasks</TableHead>
             <TableHead className="hidden text-right md:table-cell">Repos</TableHead>
             <TableHead className="hidden text-right md:table-cell">Stack</TableHead>
             <TableHead className="hidden text-right sm:table-cell">Updated</TableHead>
@@ -94,6 +95,9 @@ export function ProjectsTable({ rows, filters }: { rows: Rows; filters: ProjectL
                 )}
               </TableCell>
               <TableCell className="hidden text-right tabular-nums md:table-cell">
+                <TaskProgress done={p.done_task_count ?? 0} total={p.task_count ?? 0} />
+              </TableCell>
+              <TableCell className="hidden text-right tabular-nums md:table-cell">
                 {p.repository_count ?? 0}
               </TableCell>
               <TableCell className="hidden text-right tabular-nums md:table-cell">
@@ -107,5 +111,17 @@ export function ProjectsTable({ rows, filters }: { rows: Rows; filters: ProjectL
         </TableBody>
       </Table>
     </div>
+  )
+}
+
+/** "3/8" done with a percentage title; a dash when the project has no tasks. */
+function TaskProgress({ done, total }: { done: number; total: number }) {
+  const pct = taskProgress(done, total)
+  if (pct === null) return <span className="text-muted-foreground">-</span>
+  return (
+    <span title={`${pct}% done`}>
+      {done}/{total}
+      <span className="sr-only"> tasks done</span>
+    </span>
   )
 }

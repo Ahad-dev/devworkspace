@@ -56,8 +56,14 @@ export function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
+/** Routes that live outside the nav but belong to a section (task pages → My Work). */
+const SECTION_ALIASES: [string, string][] = [["/tasks", "/my-work"]]
+
 /** The group and item that own the current path, for breadcrumbs. */
 export function findNavMatch(pathname: string) {
+  for (const [prefix, target] of SECTION_ALIASES) {
+    if (isActivePath(pathname, prefix)) pathname = target
+  }
   for (const group of ALL_NAV_GROUPS) {
     const item = group.items.find((i) => isActivePath(pathname, i.href))
     if (item) return { group, item }

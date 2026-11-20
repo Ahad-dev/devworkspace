@@ -10,12 +10,13 @@ import { TechnologyEditor } from "@/features/projects/components/technology-edit
 import { getMyProfile } from "@/features/profile/queries"
 import {
   getProject,
+  getProjectCounts,
   listProjectActivity,
   listRepositories,
   listTechnologies,
 } from "@/features/projects/queries"
 import { REPOSITORY_PURPOSE_LABELS } from "@/lib/constants/domain"
-import { formatDate } from "@/lib/format"
+import { formatDate, taskProgress } from "@/lib/format"
 
 export const metadata: Metadata = { title: "Project" }
 
@@ -71,16 +72,30 @@ function ExternalLinkRow({ label, href }: { label: string; href: string | null }
 }
 
 async function Overview({ projectId }: { projectId: string }) {
-  const [project, repositories, technologies, activity, profile] = await Promise.all([
+  const [project, repositories, technologies, activity, profile, counts] = await Promise.all([
     getProject(projectId),
     listRepositories(projectId),
     listTechnologies(projectId),
     listProjectActivity(projectId, 1),
     getMyProfile(),
+    getProjectCounts(projectId),
   ])
   const tz = profile.timezone
+  const progress = taskProgress(counts.doneTasks, counts.tasks)
 
   const details = [
+    [
+      "Tasks",
+      <Link
+        key="t"
+        href={`/projects/${project.id}/tasks`}
+        className="underline-offset-4 hover:underline"
+      >
+        {progress === null
+          ? "No tasks"
+          : `${counts.openTasks} open · ${counts.doneTasks} of ${counts.tasks} done (${progress}%)`}
+      </Link>,
+    ],
     ["Priority", project.priority ? <PriorityBadge key="p" priority={project.priority} /> : "-"],
     ["Start date", formatDate(project.start_date, tz) ?? "-"],
     ["Target date", formatDate(project.target_date, tz) ?? "-"],

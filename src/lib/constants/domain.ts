@@ -260,3 +260,66 @@ export const TECHNOLOGY_CATEGORY_LABELS: Record<TechnologyCategory, string> = {
   tooling: "Build / tooling",
   other: "Other",
 }
+
+/* ------------------------------------------------------------------ */
+/* Task labels (Spec FR-06; M07). Same list as the task_labels check.  */
+/* ------------------------------------------------------------------ */
+
+export const LABEL_COLORS = [
+  "gray",
+  "red",
+  "orange",
+  "amber",
+  "green",
+  "teal",
+  "blue",
+  "indigo",
+  "violet",
+  "pink",
+] as const
+export type LabelColor = (typeof LABEL_COLORS)[number]
+
+/** Chip classes per colour; the dot class is for pickers. */
+export const LABEL_COLOR_META: Record<LabelColor, { chip: string; dot: string }> = {
+  gray: {
+    chip: "text-zinc-700 bg-zinc-500/10 ring-zinc-500/25 dark:text-zinc-300",
+    dot: "bg-zinc-500",
+  },
+  red: { chip: "text-red-700 bg-red-500/10 ring-red-500/25 dark:text-red-300", dot: "bg-red-500" },
+  orange: {
+    chip: "text-orange-700 bg-orange-500/10 ring-orange-500/25 dark:text-orange-300",
+    dot: "bg-orange-500",
+  },
+  amber: {
+    chip: "text-amber-700 bg-amber-500/10 ring-amber-500/25 dark:text-amber-300",
+    dot: "bg-amber-500",
+  },
+  green: {
+    chip: "text-green-700 bg-green-500/10 ring-green-500/25 dark:text-green-300",
+    dot: "bg-green-500",
+  },
+  teal: {
+    chip: "text-teal-700 bg-teal-500/10 ring-teal-500/25 dark:text-teal-300",
+    dot: "bg-teal-500",
+  },
+  blue: {
+    chip: "text-blue-700 bg-blue-500/10 ring-blue-500/25 dark:text-blue-300",
+    dot: "bg-blue-500",
+  },
+  indigo: {
+    chip: "text-indigo-700 bg-indigo-500/10 ring-indigo-500/25 dark:text-indigo-300",
+    dot: "bg-indigo-500",
+  },
+  violet: {
+    chip: "text-violet-700 bg-violet-500/10 ring-violet-500/25 dark:text-violet-300",
+    dot: "bg-violet-500",
+  },
+  pink: {
+    chip: "text-pink-700 bg-pink-500/10 ring-pink-500/25 dark:text-pink-300",
+    dot: "bg-pink-500",
+  },
+}
+
+export function labelColor(value: string): LabelColor {
+  return (LABEL_COLORS as readonly string[]).includes(value) ? (value as LabelColor) : "gray"
+}

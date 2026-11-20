@@ -48,7 +48,8 @@ describe("projectUpdateSchema", () => {
   })
 
   it("allows status to be omitted (archived projects) but not set to archived", () => {
-    const { status: _omit, ...withoutStatus } = baseUpdate
+    const withoutStatus: Partial<typeof baseUpdate> = { ...baseUpdate }
+    delete withoutStatus.status
     expect(projectUpdateSchema.safeParse(withoutStatus).success).toBe(true)
     expect(projectUpdateSchema.safeParse({ ...baseUpdate, status: "archived" }).success).toBe(false)
   })

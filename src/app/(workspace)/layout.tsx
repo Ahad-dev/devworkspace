@@ -11,9 +11,10 @@ export default function WorkspaceLayout({ children }: LayoutProps<"/">) {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
+      {/* min-w-0: wide content (task tables, the board) scrolls inside the page, not the page. */}
+      <SidebarInset className="min-w-0">
         <AppHeader />
-        <main id="main" className="flex flex-1 flex-col">
+        <main id="main" className="flex min-w-0 flex-1 flex-col">
           {children}
         </main>
       </SidebarInset>

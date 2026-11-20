@@ -1,17 +1,61 @@
 import type { Metadata } from "next"
-import { ListTodo } from "lucide-react"
+import { Suspense } from "react"
+import Link from "next/link"
+import { Plus } from "lucide-react"
 
-import { NotBuiltYet } from "@/components/shared/not-built-yet"
+import { buttonVariants } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { getProject } from "@/features/projects/queries"
+import { QuickTaskDialog } from "@/features/tasks/components/quick-task-dialog"
+import { TaskWorkspace } from "@/features/tasks/components/task-workspace"
 
 export const metadata: Metadata = { title: "Tasks" }
 
-export default function Page() {
+/** Project Tasks tab (Plan P3.11): the shared list/board with the project fixed. */
+export default function ProjectTasksPage({
+  params,
+  searchParams,
+}: PageProps<"/projects/[projectId]/tasks">) {
   return (
-    <NotBuiltYet
-      icon={ListTodo}
-      title="No tasks yet"
-      description="This project's task list and board arrive with the task manager."
-      phase="Phase 3"
-    />
+    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+      {params.then(({ projectId }) => (
+        <ProjectTasks projectId={projectId} searchParams={searchParams} />
+      ))}
+    </Suspense>
+  )
+}
+
+async function ProjectTasks({
+  projectId,
+  searchParams,
+}: {
+  projectId: string
+  searchParams: PageProps<"/projects/[projectId]/tasks">["searchParams"]
+}) {
+  const project = await getProject(projectId)
+  const fixed = { id: project.id, name: project.name }
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-base font-semibold">Tasks</h2>
+        {project.status !== "archived" ? (
+          <div className="flex items-center gap-2">
+            <QuickTaskDialog fixedProject={fixed} />
+            <Link
+              href={`/tasks/new?project=${project.id}`}
+              className={buttonVariants({ size: "sm" })}
+            >
+              <Plus />
+              New task
+            </Link>
+          </div>
+        ) : null}
+      </div>
+      <TaskWorkspace
+        searchParams={searchParams}
+        basePath={`/projects/${project.id}/tasks`}
+        project={fixed}
+      />
+    </div>
   )
 }

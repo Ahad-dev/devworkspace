@@ -61,7 +61,7 @@ export async function listProjects(filters: ProjectListFilters) {
   let query = supabase
     .from("project_summaries")
     .select(
-      "id, name, project_type, status, priority, repository_count, technology_count, updated_at, archived_at",
+      "id, name, project_type, status, priority, repository_count, technology_count, task_count, done_task_count, updated_at, archived_at",
     )
     .limit(200)
 
@@ -114,10 +114,16 @@ export const getProjectCounts = cache(async (projectId: string) => {
   const supabase = await createClient()
   const { data } = await supabase
     .from("project_summaries")
-    .select("repository_count, technology_count")
+    .select("repository_count, technology_count, task_count, done_task_count, open_task_count")
     .eq("id", projectId)
     .maybeSingle()
-  return { repositories: data?.repository_count ?? 0, technologies: data?.technology_count ?? 0 }
+  return {
+    repositories: data?.repository_count ?? 0,
+    technologies: data?.technology_count ?? 0,
+    tasks: data?.task_count ?? 0,
+    doneTasks: data?.done_task_count ?? 0,
+    openTasks: data?.open_task_count ?? 0,
+  }
 })
 
 export async function listRepositories(projectId: string) {

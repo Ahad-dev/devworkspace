@@ -35,7 +35,7 @@ export function ProjectActions({
   projectId: string
   projectName: string
   archived: boolean
-  counts: { repositories: number; technologies: number }
+  counts: { repositories: number; technologies: number; tasks?: number }
 }) {
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   const [pending, startTransition] = React.useTransition()
@@ -47,6 +47,7 @@ export function ProjectActions({
   )
 
   const children = [
+    counts.tasks && `${counts.tasks} task${counts.tasks === 1 ? "" : "s"}`,
     counts.repositories &&
       `${counts.repositories} repositor${counts.repositories === 1 ? "y" : "ies"}`,
     counts.technologies &&

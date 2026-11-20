@@ -1,11 +1,19 @@
 import {
   Archive,
   ArchiveRestore,
+  ArrowRightLeft,
+  CircleCheck,
+  Flag,
   FolderPlus,
   GitBranch,
   Layers,
+  Link2,
+  ListPlus,
+  MessageSquare,
   Pencil,
+  RotateCcw,
   Trash2,
+  Unlink,
   type LucideIcon,
 } from "lucide-react"
 
@@ -26,6 +34,18 @@ const EVENT_ICON: Record<EventType, LucideIcon> = {
   "repository.removed": GitBranch,
   "technology.added": Layers,
   "technology.removed": Layers,
+  "task.created": ListPlus,
+  "task.updated": Pencil,
+  "task.status_changed": ArrowRightLeft,
+  "task.priority_changed": Flag,
+  "task.completed": CircleCheck,
+  "task.reopened": RotateCcw,
+  "task.archived": Archive,
+  "task.restored": ArchiveRestore,
+  "task.deleted": Trash2,
+  "task.comment_added": MessageSquare,
+  "task.dependency_added": Link2,
+  "task.dependency_removed": Unlink,
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -46,6 +66,15 @@ const FIELD_LABELS: Record<string, string> = {
   primary_language: "language",
   local_path: "local path",
   readme_url: "README URL",
+  title: "title",
+  next_action: "next action",
+  due_at: "due date",
+  repository: "repository",
+  parent: "parent task",
+  external_reference_url: "reference link",
+  blocker_details: "blocker details",
+  repository_id: "repository",
+  parent_task_id: "parent task",
 }
 
 export type ActivityEvent = {

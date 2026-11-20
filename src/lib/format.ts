@@ -43,3 +43,9 @@ export function formatRelative(value: string, now: Date = new Date()) {
   }
   return "just now"
 }
+
+/** Project progress (Plan §9 decision 2): done ÷ all non-archived tasks; null when there are none. */
+export function taskProgress(done: number, total: number) {
+  if (total <= 0) return null
+  return Math.round((done / total) * 100)
+}

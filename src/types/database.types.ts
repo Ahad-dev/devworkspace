@@ -1,4 +1,4 @@
-// TEMPORARY: Phase 2 tables were added by hand in the generator's format because `pnpm db:types`
+// TEMPORARY: Phase 2–3 tables were added by hand in the generator's format because `pnpm db:types`
 // couldn't reach the type endpoint with the current token. Regenerate with `pnpm db:types` and
 // delete this comment once the CLI token can generate types.
 export type Json =
@@ -288,6 +288,272 @@ export type Database = {
           },
         ]
       }
+      task_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          owner_id: string
+          task_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          task_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          task_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_task_owner_fkey"
+            columns: ["task_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id", "owner_id"]
+          },
+        ]
+      }
+      task_dependencies: {
+        Row: {
+          created_at: string
+          depends_on_task_id: string
+          owner_id: string
+          project_id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          depends_on_task_id: string
+          owner_id?: string
+          project_id: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          depends_on_task_id?: string
+          owner_id?: string
+          project_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_dependencies_depends_on_fkey"
+            columns: ["depends_on_task_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id", "project_id"]
+          },
+          {
+            foreignKeyName: "task_dependencies_project_owner_fkey"
+            columns: ["project_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "task_dependencies_task_fkey"
+            columns: ["task_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id", "project_id"]
+          },
+        ]
+      }
+      task_label_links: {
+        Row: {
+          label_id: string
+          owner_id: string
+          task_id: string
+        }
+        Insert: {
+          label_id: string
+          owner_id?: string
+          task_id: string
+        }
+        Update: {
+          label_id?: string
+          owner_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_label_links_label_owner_fkey"
+            columns: ["label_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "task_labels"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "task_label_links_task_owner_fkey"
+            columns: ["task_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id", "owner_id"]
+          },
+        ]
+      }
+      task_labels: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          owner_id?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_labels_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_links: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          owner_id: string
+          task_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          owner_id?: string
+          task_id: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          owner_id?: string
+          task_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_links_task_owner_fkey"
+            columns: ["task_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id", "owner_id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          archived_at: string | null
+          blocker_details: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_at: string | null
+          external_reference_url: string | null
+          id: string
+          next_action: string | null
+          owner_id: string
+          parent_task_id: string | null
+          priority: Database["public"]["Enums"]["priority_level"]
+          project_id: string
+          repository_id: string | null
+          sort_order: number
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          blocker_details?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_at?: string | null
+          external_reference_url?: string | null
+          id?: string
+          next_action?: string | null
+          owner_id?: string
+          parent_task_id?: string | null
+          priority?: Database["public"]["Enums"]["priority_level"]
+          project_id: string
+          repository_id?: string | null
+          sort_order?: number
+          status?: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          blocker_details?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_at?: string | null
+          external_reference_url?: string | null
+          id?: string
+          next_action?: string | null
+          owner_id?: string
+          parent_task_id?: string | null
+          priority?: Database["public"]["Enums"]["priority_level"]
+          project_id?: string
+          repository_id?: string | null
+          sort_order?: number
+          status?: Database["public"]["Enums"]["task_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_parent_project_fkey"
+            columns: ["parent_task_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id", "project_id"]
+          },
+          {
+            foreignKeyName: "tasks_project_owner_fkey"
+            columns: ["project_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "tasks_repository_project_fkey"
+            columns: ["repository_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "repositories"
+            referencedColumns: ["id", "project_id"]
+          },
+        ]
+      }
     }
     Views: {
       project_summaries: {
@@ -302,6 +568,9 @@ export type Database = {
           project_type: Database["public"]["Enums"]["project_type"] | null
           repository_count: number | null
           status: Database["public"]["Enums"]["project_status"] | null
+          done_task_count: number | null
+          open_task_count: number | null
+          task_count: number | null
           technology_count: number | null
           updated_at: string | null
         }
@@ -331,6 +600,18 @@ export type Database = {
         | "repository.removed"
         | "technology.added"
         | "technology.removed"
+        | "task.created"
+        | "task.updated"
+        | "task.status_changed"
+        | "task.priority_changed"
+        | "task.completed"
+        | "task.reopened"
+        | "task.archived"
+        | "task.restored"
+        | "task.deleted"
+        | "task.comment_added"
+        | "task.dependency_added"
+        | "task.dependency_removed"
       priority_level:
         | "urgent"
         | "high"
@@ -373,6 +654,13 @@ export type Database = {
         | "testing"
         | "tooling"
         | "other"
+      task_status:
+        | "inbox"
+        | "ready"
+        | "in_progress"
+        | "blocked"
+        | "review"
+        | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -511,6 +799,18 @@ export const Constants = {
         "repository.removed",
         "technology.added",
         "technology.removed",
+        "task.created",
+        "task.updated",
+        "task.status_changed",
+        "task.priority_changed",
+        "task.completed",
+        "task.reopened",
+        "task.archived",
+        "task.restored",
+        "task.deleted",
+        "task.comment_added",
+        "task.dependency_added",
+        "task.dependency_removed",
       ],
       priority_level: [
         "urgent",
@@ -559,6 +859,14 @@ export const Constants = {
         "testing",
         "tooling",
         "other",
+      ],
+      task_status: [
+        "inbox",
+        "ready",
+        "in_progress",
+        "blocked",
+        "review",
+        "done",
       ],
     },
   },
