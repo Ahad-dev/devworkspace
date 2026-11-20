@@ -2445,10 +2445,10 @@ DevWorkspace is ready for first personal production use when all P0 and P1 requi
 - [x] Secret/service-role keys are not exposed in browser bundles.
 - [x] Storage bucket is private and access policies are tested.
 - [x] Uploaded files are validated.
-- [ ] Database migrations are committed and reproducible. _(Committed and applied in order; a rebuild from an empty database is proven by the restore drill into a scratch project, still to do: `docs/OPERATIONS.md` §4.)_
+- [x] Database migrations are committed and reproducible. _(Every migration applied to an empty scratch project in the restore drill, 2026-11-20.)_
 - [ ] Development and production Supabase projects are separate. _(Not applicable by the owner's choice: one project serves both, Plan §10, 2026-11-20.)_
 - [x] Production deployment has secure environment variables.
-- [ ] Backup and restore approach is documented and tested. _(Documented in `docs/OPERATIONS.md` and the first backup is taken; the restore drill is still to do.)_
+- [x] Backup and restore approach is documented and tested. _(`docs/OPERATIONS.md`; first backup taken and restored into a scratch project, 2026-11-20.)_
 - [x] Error handling and logs do not leak secrets.
 - [x] Critical end-to-end tests pass.
 - [x] Responsive and keyboard accessibility checks are complete.
