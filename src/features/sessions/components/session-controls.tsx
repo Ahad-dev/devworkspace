@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { resumeSession, startSession, type SessionResult } from "../actions"
 import { HandoffDialog, type HandoffMode } from "./handoff-dialog"
 import { SwitchSessionDialog } from "./switch-session-dialog"
+import { offlineResult, whenOnline } from "@/lib/offline/guard"
 
 type Current = { id: string; status: "active" | "paused" | "completed" }
 
@@ -63,7 +64,11 @@ export function SessionControls({
       return
     }
     startTransition(async () =>
-      handle(await startSession({ taskId }), { taskId }, "Session started"),
+      handle(
+        await whenOnline(() => startSession({ taskId }), offlineResult),
+        { taskId },
+        "Session started",
+      ),
     )
   }
 
@@ -73,7 +78,11 @@ export function SessionControls({
       return
     }
     startTransition(async () =>
-      handle(await resumeSession({ sessionId }), { resumeSessionId: sessionId }, "Session resumed"),
+      handle(
+        await whenOnline(() => resumeSession({ sessionId }), offlineResult),
+        { resumeSessionId: sessionId },
+        "Session resumed",
+      ),
     )
   }
 

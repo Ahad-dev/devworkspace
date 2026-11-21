@@ -21,6 +21,7 @@ import type { TaskStatus } from "@/lib/constants/domain"
 import { formatDateTime, formatRelative } from "@/lib/format"
 import { addComment, addDependency, addSubtask, deleteComment, removeDependency } from "../actions"
 import { useInlineForm } from "./use-inline-form"
+import { offlineFormState, offlineResult, whenOnline } from "@/lib/offline/guard"
 
 type TaskRef = { id: string; title: string; status: TaskStatus }
 
@@ -126,7 +127,7 @@ export function DependenciesPanel({
   const [removing, startRemove] = React.useTransition()
   const [state, dispatch, pending] = React.useActionState(
     async (prev: FormState, formData: FormData) => {
-      const result = await addDependency(taskId, prev, formData)
+      const result = await whenOnline(() => addDependency(taskId, prev, formData), offlineFormState)
       if (result.status === "success") setChoice("")
       return result
     },
@@ -165,7 +166,10 @@ export function DependenciesPanel({
                       disabled={removing}
                       onClick={() =>
                         startRemove(async () => {
-                          const r = await removeDependency({ taskId, dependsOnId: d.id })
+                          const r = await whenOnline(
+                            () => removeDependency({ taskId, dependsOnId: d.id }),
+                            offlineResult,
+                          )
                           if (!r.ok) toast.error(r.error)
                         })
                       }
@@ -270,7 +274,10 @@ export function CommentsPanel({
                     className="opacity-60 group-hover:opacity-100 focus-visible:opacity-100"
                     onClick={() =>
                       startDelete(async () => {
-                        const r = await deleteComment({ taskId, commentId: c.id })
+                        const r = await whenOnline(
+                          () => deleteComment({ taskId, commentId: c.id }),
+                          offlineResult,
+                        )
                         if (!r.ok) toast.error(r.error)
                       })
                     }

@@ -25,6 +25,7 @@ import {
 import { FormMessage } from "@/features/auth/components/form-message"
 import { initialFormState } from "@/features/projects/schemas"
 import { deleteTask, setTaskArchived } from "../actions"
+import { offlineFormState, offlineResult, whenOnline } from "@/lib/offline/guard"
 
 /** Edit / archive / restore / delete (Spec FR-06: archive preferred, delete confirmed). */
 export function TaskActions({
@@ -42,13 +43,13 @@ export function TaskActions({
   const [pending, startTransition] = React.useTransition()
   // Redirecting action: submitted from a form (see ProjectActions).
   const [deleteState, deleteAction, deleting] = React.useActionState(
-    deleteTask.bind(null, taskId),
+    () => whenOnline(() => deleteTask(taskId), offlineFormState),
     initialFormState,
   )
 
   function archive(next: boolean) {
     startTransition(async () => {
-      const r = await setTaskArchived(taskId, next)
+      const r = await whenOnline(() => setTaskArchived(taskId, next), offlineResult)
       if (r.ok) toast.success(next ? "Task archived" : "Task restored")
       else toast.error(r.error)
     })

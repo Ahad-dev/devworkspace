@@ -6,6 +6,7 @@ import { KeyRound, Loader2, LogOut } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button, buttonVariants } from "@/components/ui/button"
+import { offlineResult, whenOnline } from "@/lib/offline/guard"
 import { signOutOtherSessions } from "../actions"
 
 /** Security and sessions (Spec §6.11; Plan P8.1). */
@@ -31,7 +32,7 @@ export function SecurityPanel({ email }: { email: string | null }) {
           disabled={pending}
           onClick={() =>
             startTransition(async () => {
-              const r = await signOutOtherSessions()
+              const r = await whenOnline(() => signOutOtherSessions(), offlineResult)
               if (r.ok) toast.success("Signed out of every other browser and device")
               else toast.error(r.error)
             })

@@ -1,11 +1,26 @@
 import {
+  labelColor,
   PRIORITY_META,
   TASK_STATUSES,
+  type LabelColor,
   type Priority,
   type TaskStatus,
 } from "@/lib/constants/domain"
 
 /** Pure task rules shared by queries, lists, the board and tests (Spec FR-02, FR-06). */
+
+export type TaskLabel = { id: string; name: string; color: LabelColor }
+
+/** `labels:task_label_links(label:task_labels(…))` embeds → sorted labels with known colours. */
+export function flattenLabels(
+  links: { label: { id: string; name: string; color: string } | null }[],
+): TaskLabel[] {
+  return links
+    .map((l) => l.label)
+    .filter((l): l is NonNullable<typeof l> => l !== null)
+    .map((l) => ({ ...l, color: labelColor(l.color) }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
 
 type TaskLike = {
   status: TaskStatus

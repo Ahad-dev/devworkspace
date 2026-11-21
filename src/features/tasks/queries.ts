@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { z } from "zod"
 
 import { requireUser } from "@/lib/auth/session"
-import { labelColor, type LabelColor } from "@/lib/constants/domain"
+import { labelColor } from "@/lib/constants/domain"
 import { createClient } from "@/lib/supabase/server"
 import {
   BLOCKING_SELECT,
@@ -14,7 +14,13 @@ import {
   TASK_DETAIL_SELECT,
   TASK_LIST_SELECT,
 } from "./selects"
-import { isOverdue, missingNextAction, type TaskFilters } from "./utils"
+import {
+  flattenLabels,
+  isOverdue,
+  missingNextAction,
+  type TaskFilters,
+  type TaskLabel,
+} from "./utils"
 
 /**
  * Task reads for Server Components (Spec FR-06, §6.5–6.7; Plan P3.6). Every query runs as the
@@ -27,15 +33,7 @@ export const BOARD_LIMIT = 300
 
 const isUuid = (v: string) => z.uuid().safeParse(v).success
 
-export type TaskLabel = { id: string; name: string; color: LabelColor }
-
-function flattenLabels(links: { label: { id: string; name: string; color: string } | null }[]) {
-  return links
-    .map((l) => l.label)
-    .filter((l): l is NonNullable<typeof l> => l !== null)
-    .map((l) => ({ ...l, color: labelColor(l.color) }))
-    .sort((a, b) => a.name.localeCompare(b.name))
-}
+export type { TaskLabel }
 
 /* Lists --------------------------------------------------------------------- */
 

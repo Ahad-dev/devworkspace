@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils"
 import { addLink, createLabel, removeLink, setTaskLabel } from "../actions"
 import { LabelChip } from "./task-chips"
 import { useInlineForm } from "./use-inline-form"
+import { offlineResult, whenOnline } from "@/lib/offline/guard"
 
 type Label = { id: string; name: string; color: LabelColor }
 
@@ -53,7 +54,7 @@ export function LabelsEditor({
   function toggle(id: string, on: boolean) {
     startTransition(async () => {
       toggleOptimistic({ id, on })
-      const r = await setTaskLabel({ taskId, labelId: id, on })
+      const r = await whenOnline(() => setTaskLabel({ taskId, labelId: id, on }), offlineResult)
       if (!r.ok) toast.error(r.error)
     })
   }
@@ -205,7 +206,10 @@ export function LinksPanel({
                   disabled={removing}
                   onClick={() =>
                     startRemove(async () => {
-                      const r = await removeLink({ taskId, linkId: l.id })
+                      const r = await whenOnline(
+                        () => removeLink({ taskId, linkId: l.id }),
+                        offlineResult,
+                      )
                       if (!r.ok) toast.error(r.error)
                     })
                   }

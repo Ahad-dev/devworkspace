@@ -99,9 +99,10 @@ export function quickCreate(
     n: (previous?.n ?? 0) + 1,
     projects:
       kind === "task" || kind === "document" || kind === "environment"
-        ? loadProjectOptions()
+        ? // Offline: open with no options; saving then says a connection is needed.
+          loadProjectOptions().catch(() => [])
         : null,
-    tasks: kind === "session" ? loadStartableTasks() : null,
+    tasks: kind === "session" ? loadStartableTasks().catch(() => []) : null,
   }
 }
 

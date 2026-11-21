@@ -27,6 +27,7 @@ import { BOARD_COLUMNS, compareTasks } from "../utils"
 import { BlockerDialog } from "./blocker-dialog"
 import { DueDate, LabelChips } from "./task-chips"
 import { TaskStatusMenu } from "./task-status-menu"
+import { offlineResult, whenOnline } from "@/lib/offline/guard"
 
 type Move = { id: string; status: TaskStatus; blockerDetails?: string }
 
@@ -80,11 +81,15 @@ export function TaskBoard({
   function move(m: Move) {
     startTransition(async () => {
       applyMove(m)
-      const result = await changeTaskStatus({
-        taskId: m.id,
-        status: m.status,
-        blockerDetails: m.blockerDetails,
-      })
+      const result = await whenOnline(
+        () =>
+          changeTaskStatus({
+            taskId: m.id,
+            status: m.status,
+            blockerDetails: m.blockerDetails,
+          }),
+        offlineResult,
+      )
       if (!result.ok) toast.error(result.error, { description: "The task was moved back." })
     })
   }

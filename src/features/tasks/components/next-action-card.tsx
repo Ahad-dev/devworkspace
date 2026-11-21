@@ -10,6 +10,7 @@ import { initialFormState, type FormState } from "@/features/projects/schemas"
 import type { TaskStatus } from "@/lib/constants/domain"
 import { cn } from "@/lib/utils"
 import { saveNextAction } from "../actions"
+import { offlineFormState, whenOnline } from "@/lib/offline/guard"
 
 /**
  * The prominent "Next action" card (Spec FR-06 "Next action" rule): the first concrete step on
@@ -29,7 +30,10 @@ export function NextActionCard({
   const [editing, setEditing] = React.useState(false)
   const [state, dispatch, pending] = React.useActionState(
     async (prev: FormState, formData: FormData) => {
-      const result = await saveNextAction(taskId, prev, formData)
+      const result = await whenOnline(
+        () => saveNextAction(taskId, prev, formData),
+        offlineFormState,
+      )
       if (result.status === "success") {
         setEditing(false)
         toast.success("Next action saved")

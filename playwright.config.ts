@@ -20,6 +20,8 @@ export default defineConfig({
   use: {
     baseURL,
     trace: "retain-on-failure",
+    // The offline service worker is tested on a production build (pnpm test:pwa), not here.
+    serviceWorkers: "block",
   },
   projects: [
     { name: "setup", testMatch: /global\.setup\.ts/, teardown: "teardown" },

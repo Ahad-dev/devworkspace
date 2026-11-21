@@ -48,10 +48,35 @@ const securityHeaders = [
     : [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }]),
 ]
 
+/**
+ * The service worker script (Plan P9.2): never cached, so a deploy is picked up on the next visit,
+ * and its own narrow CSP, which governs the worker's fetches (same origin only: it never touches
+ * Supabase requests).
+ */
+const serviceWorkerHeaders = [
+  { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+  { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+  {
+    key: "Content-Security-Policy",
+    value:
+      "default-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+  },
+]
+
+/**
+ * Names this build's service-worker caches (Plan P9.2). A deployment id changes even when only
+ * environment variables changed (bundles differ, the commit doesn't).
+ */
+const buildId =
+  process.env.VERCEL_DEPLOYMENT_ID ??
+  process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ??
+  `local-${Date.now().toString(36)}`
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  env: { NEXT_PUBLIC_BUILD_ID: buildId },
   turbopack: {
     rules: {
       "*.css": {
@@ -61,7 +86,11 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }]
+    // For the same header, the last matching rule wins: /sw.js comes after the catch-all.
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      { source: "/sw.js", headers: serviceWorkerHeaders },
+    ]
   },
 }
 

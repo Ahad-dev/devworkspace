@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { switchSessions } from "../actions"
+import { offlineResult, whenOnline } from "@/lib/offline/guard"
 
 /**
  * Spec FR-07: starting while another session runs must offer to pause or finish it, never
@@ -37,7 +38,10 @@ export function SwitchSessionDialog({
 
   function go(mode: "pause" | "complete") {
     startTransition(async () => {
-      const r = await switchSessions({ activeSessionId, mode, ...next })
+      const r = await whenOnline(
+        () => switchSessions({ activeSessionId, mode, ...next }),
+        offlineResult,
+      )
       if (r.ok) {
         toast.success(mode === "pause" ? "Paused the other session" : "Finished the other session")
         onOpenChange(false)

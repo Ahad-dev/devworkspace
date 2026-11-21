@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ProfileForm } from "@/features/profile/components/profile-form"
 import { getMyProfile } from "@/features/profile/queries"
 import { DeleteAccountDialog } from "@/features/settings/components/delete-account-dialog"
+import { DevicePanel } from "@/features/settings/components/device-panel"
 import { ExportPanel } from "@/features/settings/components/export-panel"
 import { SecurityPanel } from "@/features/settings/components/security-panel"
 import { TaskViewForm } from "@/features/settings/components/task-view-form"
@@ -48,7 +49,7 @@ export default function Page() {
     <PageContainer>
       <PageHeader
         title="Settings"
-        description="Profile, task view, appearance, security and your data."
+        description="Profile, task view, appearance, security, this device and your data."
       />
 
       <div className="flex flex-col gap-6">
@@ -110,6 +111,14 @@ export default function Page() {
           <Suspense fallback={<Skeleton className="h-24 w-full" />}>
             <SecuritySettings />
           </Suspense>
+        </SettingsSection>
+
+        <SettingsSection
+          id="device-heading"
+          title="This device"
+          description="Install the app, and the copy of your tasks this browser keeps for offline reading."
+        >
+          <DevicePanel />
         </SettingsSection>
 
         <SettingsSection

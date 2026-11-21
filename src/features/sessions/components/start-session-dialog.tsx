@@ -25,6 +25,7 @@ import {
 import { TASK_STATUS_META, type TaskStatus } from "@/lib/constants/domain"
 import { startSession } from "../actions"
 import { SwitchSessionDialog } from "./switch-session-dialog"
+import { offlineResult, whenOnline } from "@/lib/offline/guard"
 
 type StartableTask = { id: string; title: string; status: string; projectName: string }
 
@@ -49,7 +50,7 @@ export function StartSessionDialog({
   function start() {
     if (!taskId) return
     startTransition(async () => {
-      const r = await startSession({ taskId })
+      const r = await whenOnline(() => startSession({ taskId }), offlineResult)
       if (r.ok) {
         toast.success("Session started")
         onOpenChange(false)

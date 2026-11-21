@@ -29,6 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { FormMessage, toFieldErrors } from "@/features/auth/components/form-message"
 import { initialFormState, type FormState } from "@/features/projects/schemas"
 import { createQuickTask } from "../actions"
+import { offlineFormState, whenOnline } from "@/lib/offline/guard"
 
 type Option = { id: string; name: string }
 
@@ -61,7 +62,7 @@ export function QuickTaskDialog({
 
   const [state, formAction, pending] = useActionState(
     async (prev: FormState, formData: FormData) => {
-      const result = await createQuickTask(prev, formData)
+      const result = await whenOnline(() => createQuickTask(prev, formData), offlineFormState)
       if (result.status === "success") {
         const id = (result.data as { id?: string } | undefined)?.id
         setOpen(false)

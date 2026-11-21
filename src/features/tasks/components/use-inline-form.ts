@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { initialFormState, type FormState } from "@/features/projects/schemas"
+import { offlineFormState, whenOnline } from "@/lib/offline/guard"
 
 /**
  * Small forms on the task page (comments, links, subtasks). Submits through the action
@@ -11,7 +12,11 @@ import { initialFormState, type FormState } from "@/features/projects/schemas"
  */
 export function useInlineForm(action: (prev: FormState, formData: FormData) => Promise<FormState>) {
   const formRef = React.useRef<HTMLFormElement>(null)
-  const [state, dispatch, pending] = React.useActionState(action, initialFormState)
+  const [state, dispatch, pending] = React.useActionState(
+    (prev: FormState, formData: FormData) =>
+      whenOnline(() => action(prev, formData), offlineFormState),
+    initialFormState,
+  )
 
   React.useEffect(() => {
     if (state.status === "success") formRef.current?.reset()

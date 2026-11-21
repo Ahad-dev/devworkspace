@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils"
 import { changeTaskPriority, changeTaskStatus } from "../actions"
 import { BlockerDialog } from "./blocker-dialog"
+import { offlineResult, whenOnline } from "@/lib/offline/guard"
 
 /**
  * Status picker shown as the status badge. It is the keyboard alternative to dragging on the
@@ -53,7 +54,10 @@ export function TaskStatusMenu({
     if (onChange) return onChange(next, blockerDetails)
     startTransition(async () => {
       setOptimistic(next)
-      const result = await changeTaskStatus({ taskId, status: next, blockerDetails })
+      const result = await whenOnline(
+        () => changeTaskStatus({ taskId, status: next, blockerDetails }),
+        offlineResult,
+      )
       if (!result.ok) toast.error(result.error)
     })
   }
@@ -134,7 +138,10 @@ export function TaskPriorityMenu({ taskId, priority }: { taskId: string; priorit
             const next = v as Priority
             startTransition(async () => {
               setOptimistic(next)
-              const result = await changeTaskPriority({ taskId, priority: next })
+              const result = await whenOnline(
+                () => changeTaskPriority({ taskId, priority: next }),
+                offlineResult,
+              )
               if (!result.ok) toast.error(result.error)
             })
           }}

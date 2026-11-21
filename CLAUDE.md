@@ -49,6 +49,7 @@ Filled in as scripts are added (see `package.json`).
 | `pnpm test`                                             | Unit tests (CI)                                                                                           |
 | `pnpm test:int`                                         | Integration tests against the dev project (needs `.env.test.local`)                                       |
 | `pnpm test:e2e`                                         | Playwright e2e in local Chrome (needs `.env.test.local`)                                                  |
+| `pnpm test:pwa`                                         | PWA and offline tests on a production build (port 3100; needs `.env.test.local`)                          |
 | `pnpm db:new <name>` / `pnpm db:push` / `pnpm db:types` | Migrations and generated types (`db:push` targets the linked dev project; pass `--yes` non-interactively) |
 
 ## Git

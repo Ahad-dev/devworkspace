@@ -84,7 +84,31 @@ How this is enforced:
   Variables are imported by name only. The data file and copied documents live in the gitignored
   `imports/` folder.
 
-## 7. Reporting
+## 7. Installed app and offline copy (Phase 9)
+
+- **What is on the device.** One IndexedDB record (`devworkspace-offline`) holding a copy of the
+  signed-in user's tasks: open tasks and those completed in the last 14 days, with project and
+  repository names, labels, links, dependencies and the last 20 comments. Nothing else: no handoffs,
+  documents, environments or variable metadata. DevWorkspace holds no secret values, and the secret
+  guard already keeps them out of task text. The copy is not encrypted at rest, like any browser
+  data, so "Keep a copy of my tasks on this device" (Settings → This device) can be turned off on a
+  shared computer.
+- **When it is deleted.** On the sign-in page (every way out of a session ends there: sign-out,
+  account deletion, an expired or revoked session), before the sign-out request is sent, when a
+  different user signs in, from Settings, and when it is more than 30 days old. A device signed out
+  remotely ("Sign out other sessions") keeps its copy until it next reaches the server; the 30-day
+  limit is the backstop.
+- **What the service worker stores.** Only the static `/offline` page, hashed `/_next/static` build
+  files and the app icons. It never stores workspace pages, RSC payloads, server-action requests or
+  Supabase responses, and it only handles same-origin GET requests. The `/offline` page's HTML holds
+  no user data: the saved copy is read in the browser (checked by `pnpm test:pwa`).
+- **Public files.** `/sw.js`, `/manifest.webmanifest` and `/offline` skip the auth proxy (browsers
+  fetch the manifest without cookies). `/sw.js` is never cached and has its own CSP:
+  `default-src 'self'; script-src 'self'; connect-src 'self'`. The app's CSP already allowed
+  `worker-src 'self'` and `manifest-src 'self'`.
+- **Edits offline** are never queued: they fail with "You're offline. Reconnect to save this change."
+
+## 8. Reporting
 
 Found something that breaks these rules? Treat it as a bug with top priority: fix it, add a test,
 and note it in the Plan's decision log.

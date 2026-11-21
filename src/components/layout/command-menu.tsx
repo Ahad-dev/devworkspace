@@ -26,6 +26,7 @@ import {
   type SearchResult,
 } from "@/features/search/utils"
 import { ALL_NAV_GROUPS } from "./nav-config"
+import { whenOnline } from "@/lib/offline/guard"
 
 const noopSubscribe = () => () => {}
 
@@ -75,7 +76,10 @@ export function CommandMenu() {
     const id = ++latest.current
     const t = window.setTimeout(async () => {
       setSearching(true)
-      const r = await quickSearch(term)
+      const r = await whenOnline(
+        () => quickSearch(term),
+        () => ({ ok: false as const, error: "You're offline. Search needs a connection." }),
+      )
       if (id !== latest.current) return
       setSearching(false)
       if (r.ok) {

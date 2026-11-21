@@ -27,6 +27,7 @@ import {
   type Priority,
   type TaskStatus,
 } from "@/lib/constants/domain"
+import { offlineFormState, whenOnline } from "@/lib/offline/guard"
 
 type Option = { id: string; name: string }
 const NONE = "none"
@@ -85,7 +86,11 @@ export function TaskForm({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [state, formAction, pending] = useActionState(action, initialFormState)
+  const [state, formAction, pending] = useActionState(
+    (prev: FormState, formData: FormData) =>
+      whenOnline(() => action(prev, formData), offlineFormState),
+    initialFormState,
+  )
   const [status, setStatus] = React.useState<TaskStatus>(defaults.status)
   const err = (k: string) => state.fieldErrors?.[k]
 

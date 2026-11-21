@@ -81,11 +81,25 @@ Authentication → Users → Add user.
 | `pnpm test`     | Unit tests (no network)                                                     |
 | `pnpm test:int` | Integration tests: RLS and constraints against the **dev** Supabase project |
 | `pnpm test:e2e` | Playwright browser tests (starts `pnpm dev` if it isn't running)            |
+| `pnpm test:pwa` | Install files, service worker and offline reading on a production build     |
+
+`pnpm test:pwa` runs `pnpm build && pnpm start --port 3100` (service workers only run in production builds,
+and port 3100 keeps a worker away from `pnpm dev` on 3000). It reuses a server already on 3100, so stop any
+older build there first.
 
 Integration and e2e tests create throwaway users and delete them afterwards. They need a gitignored
 `.env.test.local` with `SUPABASE_TEST_PROJECT_REF` and the dev project's `SUPABASE_SECRET_KEY` (sb_secret_…).
 They refuse to run if `NEXT_PUBLIC_SUPABASE_URL` points at any other project. Locally, e2e uses your installed
 Chrome (`PW_CHANNEL=msedge` for Edge); CI uses Playwright's Chromium.
+
+## Installing the app and offline use
+
+DevWorkspace can be installed from the browser (Chrome or Edge: the install icon in the address bar, or
+Settings → This device; iPhone and iPad: Safari → Share → Add to Home Screen, then sign in inside the app).
+While you use it online, the app keeps a copy of your open and recently completed tasks in that browser. Without
+a connection, pages show that saved copy, read-only; edits need a connection. Signing out deletes the copy, and
+it can be switched off per device in Settings → This device. Details: Plan Phase 9 and `docs/SECURITY.md` §7.
+`node scripts/generate-icons.mts` regenerates the app icons.
 
 ## Supabase CLI
 

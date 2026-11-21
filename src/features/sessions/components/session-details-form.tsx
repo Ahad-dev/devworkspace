@@ -18,6 +18,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { initialFormState, type FormState } from "@/features/projects/schemas"
 import { updateSessionDetails } from "../actions"
+import { offlineFormState, whenOnline } from "@/lib/offline/guard"
 
 const NONE = "none"
 
@@ -38,7 +39,10 @@ export function SessionDetailsForm({
   const [open, setOpen] = React.useState(false)
   const [state, dispatch, pending] = React.useActionState(
     async (prev: FormState, formData: FormData) => {
-      const r = await updateSessionDetails(sessionId, prev, formData)
+      const r = await whenOnline(
+        () => updateSessionDetails(sessionId, prev, formData),
+        offlineFormState,
+      )
       if (r.status === "success") {
         toast.success("Session details saved")
         setOpen(false)

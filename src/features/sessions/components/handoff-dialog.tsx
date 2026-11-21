@@ -26,6 +26,7 @@ import {
   type HandoffPayload,
   type SessionResult,
 } from "../actions"
+import { offlineResult, whenOnline } from "@/lib/offline/guard"
 
 export type HandoffMode = "pause" | "complete" | "save"
 
@@ -106,15 +107,18 @@ export function HandoffDialog({
       const handoff = { ...values, related_links: links }
       // datetime-local is the browser's local time; send an ISO instant.
       const end = endedAt ? new Date(endedAt).toISOString() : null
-      const r =
-        mode === "save"
-          ? await saveHandoff({ sessionId, handoff, updateTaskNextAction: updateTask })
-          : await (mode === "pause" ? pauseSession : completeSession)({
-              sessionId,
-              handoff,
-              endedAt: end,
-              updateTaskNextAction: updateTask,
-            })
+      const r = await whenOnline(
+        () =>
+          mode === "save"
+            ? saveHandoff({ sessionId, handoff, updateTaskNextAction: updateTask })
+            : (mode === "pause" ? pauseSession : completeSession)({
+                sessionId,
+                handoff,
+                endedAt: end,
+                updateTaskNextAction: updateTask,
+              }),
+        offlineResult,
+      )
       setResult(r)
       if (r.ok) {
         toast.success(copy.done)
