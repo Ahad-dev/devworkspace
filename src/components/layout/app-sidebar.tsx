@@ -18,7 +18,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { NAV_GROUPS, PERSONAL_NAV, isActivePath, type NavGroup } from "./nav-config"
+import { NAV_GROUPS, PERSONAL_NAV, isActivePath, sectionPath, type NavGroup } from "./nav-config"
 
 /** pathname is null while the URL streams in on dynamic routes: links render, just not highlighted. */
 function NavGroupMenu({ group, pathname }: { group: NavGroup; pathname: string | null }) {
@@ -28,7 +28,8 @@ function NavGroupMenu({ group, pathname }: { group: NavGroup; pathname: string |
       <SidebarGroupContent>
         <SidebarMenu>
           {group.items.map((item) => {
-            const active = pathname !== null && isActivePath(pathname, item.href)
+            // Task and environment pages light up the section they belong to.
+            const active = pathname !== null && isActivePath(sectionPath(pathname), item.href)
             return (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton asChild isActive={active} tooltip={item.title}>

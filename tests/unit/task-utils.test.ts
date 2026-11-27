@@ -88,7 +88,7 @@ describe("parseTaskFilters", () => {
   it("defaults sensibly", () => {
     expect(parseTaskFilters({})).toMatchObject({
       view: "all",
-      layout: "list",
+      layout: "board",
       statuses: [],
       priorities: [],
       flags: [],

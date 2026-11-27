@@ -25,7 +25,7 @@ import {
   SEARCH_KIND_LABELS,
   type SearchResult,
 } from "@/features/search/utils"
-import { ALL_NAV_GROUPS } from "./nav-config"
+import { ALL_NAV_GROUPS, PALETTE_EXTRAS } from "./nav-config"
 import { whenOnline } from "@/lib/offline/guard"
 
 const noopSubscribe = () => () => {}
@@ -118,10 +118,14 @@ export function CommandMenu() {
   }, [])
 
   const needle = term.toLowerCase()
-  const navGroups = ALL_NAV_GROUPS.map((g) => ({
-    ...g,
-    items: g.items.filter((i) => !needle || `${g.label} ${i.title}`.toLowerCase().includes(needle)),
-  })).filter((g) => g.items.length)
+  const navGroups = [...ALL_NAV_GROUPS, PALETTE_EXTRAS]
+    .map((g) => ({
+      ...g,
+      items: g.items.filter(
+        (i) => !needle || `${g.label} ${i.title}`.toLowerCase().includes(needle),
+      ),
+    }))
+    .filter((g) => g.items.length)
   const themes = THEMES.filter((t) => !needle || t.label.toLowerCase().includes(needle))
   const groups = groupResults(results)
   const searchable = term.length >= 2

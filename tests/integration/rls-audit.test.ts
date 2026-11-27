@@ -33,6 +33,17 @@ type Entry = {
   intrude: () => Record<string, unknown>
 }
 
+/** A vault_keys row with the right shapes: 16-byte salts, 48-byte wrapped keys, 12-byte IVs. */
+const VAULT_ROW = {
+  kdf_iterations: 600_000,
+  kdf_salt: "A".repeat(22) + "==",
+  master_wrapped_key: "A".repeat(64),
+  master_wrap_iv: "A".repeat(16),
+  recovery_salt: "A".repeat(22) + "==",
+  recovery_wrapped_key: "A".repeat(64),
+  recovery_wrap_iv: "A".repeat(16),
+}
+
 describe("RLS audit: every table, owner allowed and everyone else denied", () => {
   let a: TestUser
   let b: TestUser
@@ -123,6 +134,21 @@ describe("RLS audit: every table, owner allowed and everyone else denied", () =>
       project_id: id.project,
       title: "Run",
       command_text: "pnpm dev",
+    })
+    // Accounts vault (Plan P11.1): dummy key material of the right shapes; nothing here decrypts.
+    id.vault = await ins("vault_keys", VAULT_ROW)
+    id.account = await ins("accounts", {
+      platform: "Neon",
+      label: "Audit",
+      login_identifier: "a@example.com",
+    })
+    id.secret = await ins("account_secrets", {
+      id: randomUUID(),
+      account_id: id.account,
+      label: "Password",
+      kind: "password",
+      ciphertext: "A".repeat(64),
+      iv: "A".repeat(16),
     })
     const ev = await db(a).from("activity_events").select("id").limit(1).single()
     id.event = ev.data.id
@@ -221,6 +247,29 @@ describe("RLS audit: every table, owner allowed and everyone else denied", () =>
         project_id: id.project,
         project_service_id: id.service,
         environment_id: id.env,
+      }),
+    },
+    vault_keys: {
+      key: byId("vault"),
+      patch: { kdf_iterations: 700_000 },
+      // B may create its own vault; claiming A as owner must fail.
+      intrude: () => ({ ...VAULT_ROW, owner_id: a.id }),
+    },
+    accounts: {
+      key: byId("account"),
+      patch: { platform: "Taken" },
+      intrude: () => ({ platform: "Intruder", owner_id: a.id }),
+    },
+    account_secrets: {
+      key: byId("secret"),
+      patch: { label: "Taken" },
+      intrude: () => ({
+        id: randomUUID(),
+        account_id: id.account,
+        label: "Intruder",
+        kind: "password",
+        ciphertext: "B".repeat(64),
+        iv: "B".repeat(16),
       }),
     },
     secret_references: {

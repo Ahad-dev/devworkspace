@@ -17,6 +17,170 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_secrets: {
+        Row: {
+          id: string
+          owner_id: string
+          account_id: string
+          label: string
+          kind: Database["public"]["Enums"]["account_secret_kind"]
+          format_version: number
+          ciphertext: string
+          iv: string
+          value_updated_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          owner_id?: string
+          account_id: string
+          label: string
+          kind?: Database["public"]["Enums"]["account_secret_kind"]
+          format_version?: number
+          ciphertext: string
+          iv: string
+          value_updated_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          account_id?: string
+          label?: string
+          kind?: Database["public"]["Enums"]["account_secret_kind"]
+          format_version?: number
+          ciphertext?: string
+          iv?: string
+          value_updated_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_secrets_account_owner_fkey"
+            columns: ["account_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "account_secrets_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_secrets_vault_owner_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vault_keys"
+            referencedColumns: ["owner_id"]
+          },
+        ]
+      }
+      accounts: {
+        Row: {
+          id: string
+          owner_id: string
+          platform: string
+          label: string | null
+          login_identifier: string | null
+          login_url: string | null
+          two_factor: Database["public"]["Enums"]["account_two_factor"]
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id?: string
+          platform: string
+          label?: string | null
+          login_identifier?: string | null
+          login_url?: string | null
+          two_factor?: Database["public"]["Enums"]["account_two_factor"]
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          platform?: string
+          label?: string | null
+          login_identifier?: string | null
+          login_url?: string | null
+          two_factor?: Database["public"]["Enums"]["account_two_factor"]
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vault_keys: {
+        Row: {
+          id: string
+          owner_id: string
+          format_version: number
+          kdf_iterations: number
+          kdf_salt: string
+          master_wrapped_key: string
+          master_wrap_iv: string
+          recovery_salt: string
+          recovery_wrapped_key: string
+          recovery_wrap_iv: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id?: string
+          format_version?: number
+          kdf_iterations: number
+          kdf_salt: string
+          master_wrapped_key: string
+          master_wrap_iv: string
+          recovery_salt: string
+          recovery_wrapped_key: string
+          recovery_wrap_iv: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          format_version?: number
+          kdf_iterations?: number
+          kdf_salt?: string
+          master_wrapped_key?: string
+          master_wrap_iv?: string
+          recovery_salt?: string
+          recovery_wrapped_key?: string
+          recovery_wrap_iv?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_keys_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_events: {
         Row: {
           created_at: string
@@ -866,6 +1030,7 @@ export type Database = {
       }
       environment_variables: {
         Row: {
+          account_secret_id: string | null
           id: string
           owner_id: string
           created_at: string
@@ -882,6 +1047,7 @@ export type Database = {
           secret_reference_id: string | null
         }
         Insert: {
+          account_secret_id?: string | null
           id?: string
           owner_id?: string
           created_at?: string
@@ -898,6 +1064,7 @@ export type Database = {
           secret_reference_id?: string | null
         }
         Update: {
+          account_secret_id?: string | null
           id?: string
           owner_id?: string
           created_at?: string
@@ -914,6 +1081,13 @@ export type Database = {
           secret_reference_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "environment_variables_account_secret_owner_fkey"
+            columns: ["account_secret_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "account_secrets"
+            referencedColumns: ["id", "owner_id"]
+          },
           {
             foreignKeyName: "environment_variables_environment_project_fkey"
             columns: ["environment_id","project_id"]
@@ -939,6 +1113,7 @@ export type Database = {
       }
       project_services: {
         Row: {
+          account_id: string | null
           id: string
           owner_id: string
           created_at: string
@@ -953,6 +1128,7 @@ export type Database = {
           notes: string | null
         }
         Insert: {
+          account_id?: string | null
           id?: string
           owner_id?: string
           created_at?: string
@@ -967,6 +1143,7 @@ export type Database = {
           notes?: string | null
         }
         Update: {
+          account_id?: string | null
           id?: string
           owner_id?: string
           created_at?: string
@@ -981,6 +1158,13 @@ export type Database = {
           notes?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "project_services_account_owner_fkey"
+            columns: ["account_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "owner_id"]
+          },
           {
             foreignKeyName: "project_services_project_owner_fkey"
             columns: ["project_id","owner_id"]
@@ -1360,6 +1544,17 @@ export type Database = {
       }
     }
     Functions: {
+      add_project_service: {
+        Args: {
+          p_account_id: string | null
+          p_category: Database["public"]["Enums"]["service_category"]
+          p_environment_ids: string[]
+          p_name: string
+          p_project_id: string
+          p_provider: string | null
+        }
+        Returns: string
+      }
       complete_work_session: {
         Args: {
           p_ended_at?: string
@@ -1430,6 +1625,8 @@ export type Database = {
       }
     }
     Enums: {
+      account_secret_kind: "password" | "api_key" | "token" | "recovery_codes" | "note"
+      account_two_factor: "unknown" | "none" | "authenticator_app" | "sms" | "email" | "security_key"
       activity_event_type:
         | "project.created"
         | "project.updated"
@@ -1485,6 +1682,16 @@ export type Database = {
         | "command.created"
         | "command.updated"
         | "command.deleted"
+        | "account.added"
+        | "account.updated"
+        | "account.removed"
+        | "account_secret.added"
+        | "account_secret.updated"
+        | "account_secret.removed"
+        | "vault.created"
+        | "vault.password_changed"
+        | "vault.recovery_key_changed"
+        | "vault.reset"
       priority_level:
         | "urgent"
         | "high"
@@ -1672,6 +1879,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_secret_kind: ["password", "api_key", "token", "recovery_codes", "note"],
+      account_two_factor: ["unknown", "none", "authenticator_app", "sms", "email", "security_key"],
       activity_event_type: [
         "project.created",
         "project.updated",
@@ -1727,6 +1936,16 @@ export const Constants = {
         "command.created",
         "command.updated",
         "command.deleted",
+        "account.added",
+        "account.updated",
+        "account.removed",
+        "account_secret.added",
+        "account_secret.updated",
+        "account_secret.removed",
+        "vault.created",
+        "vault.password_changed",
+        "vault.recovery_key_changed",
+        "vault.reset",
       ],
       priority_level: [
         "urgent",

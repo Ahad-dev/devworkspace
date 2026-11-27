@@ -7,6 +7,7 @@ import { PriorityBadge } from "@/components/shared/domain-badges"
 import { Markdown } from "@/components/shared/markdown"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ActivityList } from "@/features/projects/components/activity-list"
+import { ProjectNextUp } from "@/features/projects/components/project-next-up"
 import { TechnologyEditor } from "@/features/projects/components/technology-editor"
 import { getMyProfile } from "@/features/profile/queries"
 import { HandoffCard } from "@/features/sessions/components/handoff-card"
@@ -110,6 +111,14 @@ async function Overview({ projectId }: { projectId: string }) {
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
       <div className="flex min-w-0 flex-col gap-8">
+        <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+          <ProjectNextUp
+            project={{ id: project.id, name: project.name }}
+            counts={counts}
+            canEdit={project.status !== "archived"}
+          />
+        </Suspense>
+
         <Section
           title="About"
           action={

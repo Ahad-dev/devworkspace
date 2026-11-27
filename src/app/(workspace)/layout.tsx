@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar"
 import { OfflineBanner } from "@/components/layout/offline-banner"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { OfflineSync } from "@/features/offline/components/offline-sync"
+import { VaultLifecycle } from "@/features/vault/store"
 
 /**
  * Workspace shell. With Cache Components on, this layout stays static: session-dependent
@@ -30,6 +31,8 @@ export default function WorkspaceLayout({ children }: LayoutProps<"/">) {
       </SidebarInset>
       {/* Keeps this device's offline copy of tasks fresh (Plan P9.3). Renders nothing. */}
       <OfflineSync />
+      {/* Locks the password vault when idle or the page goes away (Plan P11.3). */}
+      <VaultLifecycle />
     </SidebarProvider>
   )
 }

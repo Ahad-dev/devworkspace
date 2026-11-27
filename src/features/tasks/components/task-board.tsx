@@ -15,36 +15,58 @@ import {
   type DragEndEvent,
   type KeyboardCoordinateGetter,
 } from "@dnd-kit/core"
-import { CircleSlash, GripVertical } from "lucide-react"
+import { ArrowRight, CircleSlash, GripVertical, Plus } from "lucide-react"
 import { toast } from "sonner"
 
 import { PriorityBadge, TaskStatusBadge } from "@/components/shared/domain-badges"
+import { Button } from "@/components/ui/button"
 import { TASK_STATUS_META, type TaskStatus } from "@/lib/constants/domain"
 import { cn } from "@/lib/utils"
 import { changeTaskStatus } from "../actions"
 import type { TaskListRow } from "../queries"
-import { BOARD_COLUMNS, compareTasks } from "../utils"
+import { compareTasks } from "../utils"
 import { BlockerDialog } from "./blocker-dialog"
+import { QuickTaskDialog } from "./quick-task-dialog"
 import { DueDate, LabelChips } from "./task-chips"
 import { TaskStatusMenu } from "./task-status-menu"
 import { offlineResult, whenOnline } from "@/lib/offline/guard"
 
 type Move = { id: string; status: TaskStatus; blockerDetails?: string }
+type Option = { id: string; name: string }
+
+/** Most recently completed first; everything else by priority, due date, then last update. */
+function compareInColumn(status: TaskStatus) {
+  return status === "done"
+    ? (a: TaskListRow, b: TaskListRow) => (b.completed_at ?? "").localeCompare(a.completed_at ?? "")
+    : compareTasks
+}
 
 /**
  * Kanban board (Spec §6.6; Plan P3.8). Drag a card by its handle to change status. The move shows
  * at once and rolls back with a toast if the server rejects it (useOptimistic resets to the
  * server's data when the transition ends). Keyboard: the handle supports space + arrow keys, and
  * every card has a status menu. Dropping into Blocked asks for blocker details first.
+ *
+ * Only the columns that fit the current view are shown (boardColumns). On phones each column takes
+ * the screen width and snaps into place, with a row of status chips to jump between them
+ * (Plan P10.2).
  */
 export function TaskBoard({
   tasks,
+  columns: statuses,
   showProject,
   timeZone,
+  quickAdd,
+  doneFooter,
 }: {
   tasks: TaskListRow[]
+  columns: readonly TaskStatus[]
   showProject: boolean
   timeZone: string
+  /** Adds a "+" to the Inbox column that opens quick add. */
+  quickAdd?: { fixedProject?: Option; projects?: Option[] | Promise<Option[]> }
+  /** A link under the Done column to the full history. */
+  doneFooter?: { href: string; days: number }
 }) {
   const [optimistic, applyMove] = React.useOptimistic(tasks, (state: TaskListRow[], m: Move) =>
     state.map((t) =>
@@ -62,6 +84,7 @@ export function TaskBoard({
   const [moving, startTransition] = React.useTransition()
   const [activeId, setActiveId] = React.useState<string | null>(null)
   const [blockTarget, setBlockTarget] = React.useState<{ id: string; title: string } | null>(null)
+  const [addOpen, setAddOpen] = React.useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -71,11 +94,11 @@ export function TaskBoard({
   const byId = React.useMemo(() => new Map(optimistic.map((t) => [t.id, t])), [optimistic])
   const columns = React.useMemo(
     () =>
-      BOARD_COLUMNS.map((status) => ({
+      statuses.map((status) => ({
         status,
-        tasks: optimistic.filter((t) => t.status === status).sort(compareTasks),
+        tasks: optimistic.filter((t) => t.status === status).sort(compareInColumn(status)),
       })),
-    [optimistic],
+    [optimistic, statuses],
   )
 
   function move(m: Move) {
@@ -139,14 +162,71 @@ export function TaskBoard({
           },
         }}
       >
+        {columns.length > 1 ? (
+          <nav
+            aria-label="Jump to a column"
+            className="-mx-1 flex gap-1 overflow-x-auto px-1 md:hidden"
+          >
+            {columns.map((col) => (
+              <button
+                key={col.status}
+                type="button"
+                onClick={() => scrollToColumn(col.status)}
+                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium whitespace-nowrap outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                {TASK_STATUS_META[col.status].label}
+                <span className="text-muted-foreground tabular-nums">{col.tasks.length}</span>
+              </button>
+            ))}
+          </nav>
+        ) : null}
         <div
           data-slot="task-board"
           aria-busy={moving}
-          className="-mx-4 overflow-x-auto px-4 pb-2 md:-mx-6 md:px-6"
+          className={cn(
+            "-mx-4 overflow-x-auto px-4 pb-2 md:-mx-6 md:px-6",
+            // Phones: one column per screen, snapping into place as you swipe.
+            columns.length > 1 && "snap-x snap-mandatory scroll-px-4 md:snap-none",
+          )}
         >
-          <div className="grid w-max grid-flow-col gap-3" style={{ gridAutoColumns: "17rem" }}>
+          <div
+            className={cn(
+              "grid gap-3",
+              columns.length > 1
+                ? "w-max [grid-auto-columns:calc(100vw-3rem)] grid-flow-col sm:[grid-auto-columns:20rem] md:[grid-auto-columns:17rem]"
+                : "max-w-xl",
+            )}
+          >
             {columns.map((col) => (
-              <BoardColumn key={col.status} status={col.status} count={col.tasks.length}>
+              <BoardColumn
+                key={col.status}
+                status={col.status}
+                count={col.tasks.length}
+                action={
+                  col.status === "inbox" && quickAdd ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Add a task to Inbox"
+                      onClick={() => setAddOpen(true)}
+                    >
+                      <Plus />
+                    </Button>
+                  ) : null
+                }
+                footer={
+                  col.status === "done" && doneFooter ? (
+                    <Link
+                      href={doneFooter.href}
+                      className="inline-flex items-center gap-1 px-1 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                    >
+                      Done in the last {doneFooter.days} days. See all completed
+                      <ArrowRight className="size-3" aria-hidden />
+                    </Link>
+                  ) : null
+                }
+              >
                 {col.tasks.map((t) => (
                   <DraggableCard
                     key={t.id}
@@ -172,6 +252,15 @@ export function TaskBoard({
         </DragOverlay>
       </DndContext>
 
+      {quickAdd ? (
+        <QuickTaskDialog
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          fixedProject={quickAdd.fixedProject}
+          projects={quickAdd.projects}
+        />
+      ) : null}
+
       <BlockerDialog
         open={blockTarget !== null}
         taskTitle={blockTarget?.title}
@@ -188,21 +277,29 @@ export function TaskBoard({
 function BoardColumn({
   status,
   count,
+  action,
+  footer,
   children,
 }: {
   status: TaskStatus
   count: number
+  action?: React.ReactNode
+  footer?: React.ReactNode
   children: React.ReactNode
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
   return (
     <section
+      id={`board-column-${status}`}
       aria-label={`${TASK_STATUS_META[status].label} column, ${count} ${count === 1 ? "task" : "tasks"}`}
-      className="flex flex-col gap-2"
+      className="flex snap-start flex-col gap-2"
     >
-      <header className="flex items-center justify-between px-1">
+      <header className="flex min-h-7 items-center justify-between gap-2 px-1">
         <TaskStatusBadge status={status} />
-        <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
+        <span className="flex items-center gap-1">
+          <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
+          {action}
+        </span>
       </header>
       <div
         ref={setNodeRef}
@@ -217,6 +314,7 @@ function BoardColumn({
           children
         )}
       </div>
+      {footer}
     </section>
   )
 }
@@ -316,6 +414,20 @@ function CardBody({
       </div>
     </article>
   )
+}
+
+/**
+ * Scrolls the board so a column starts at its left edge (the phone status chips). scrollIntoView
+ * doesn't move a scroll-snap container reliably, so the board is scrolled directly.
+ */
+function scrollToColumn(status: TaskStatus) {
+  const board = document.querySelector<HTMLElement>('[data-slot="task-board"]')
+  const column = document.getElementById(`board-column-${status}`)
+  if (!board || !column) return
+  const pad = Number.parseFloat(getComputedStyle(board).paddingLeft) || 0
+  const left = column.getBoundingClientRect().left - board.getBoundingClientRect().left - pad
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  board.scrollBy({ left, behavior: reduce ? "auto" : "smooth" })
 }
 
 /** Arrow left/right jumps the dragged card to the neighbouring column. */

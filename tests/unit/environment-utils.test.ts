@@ -95,6 +95,7 @@ describe("buildComparison", () => {
     verification_method: "manual",
     last_verified_at: "2026-05-01T00:00:00Z",
     secret_reference_id: null,
+    account_secret_id: null,
     ...extra,
   })
 
@@ -103,7 +104,7 @@ describe("buildComparison", () => {
       ["dev", "prod"],
       [
         v("dev", "DATABASE_URL", { is_sensitive: true, secret_reference_id: "r1" }),
-        v("prod", "DATABASE_URL", { is_sensitive: true }),
+        v("prod", "DATABASE_URL", { is_sensitive: true, account_secret_id: "s1" }),
         v("dev", "SENTRY_DSN"),
         v("prod", "REDIS_URL", { configuration_status: "unknown" }),
         v("dev", "DEBUG", { is_required: false }),
@@ -118,8 +119,8 @@ describe("buildComparison", () => {
     ])
     const db = rows.find((r) => r.name === "DATABASE_URL")!
     expect(db.sensitive).toBe(true)
-    expect(db.cells.dev).toMatchObject({ present: true, hasReference: true })
-    expect(db.cells.prod).toMatchObject({ present: true, hasReference: false })
+    expect(db.cells.dev).toMatchObject({ present: true, hasReference: true, inVault: false })
+    expect(db.cells.prod).toMatchObject({ present: true, hasReference: false, inVault: true })
     expect(rows.find((r) => r.name === "SENTRY_DSN")!.cells.prod).toEqual({ present: false })
     expect(rows.some((r) => r.name === "IGNORED")).toBe(false)
   })
@@ -169,11 +170,22 @@ describe("schemas", () => {
       verification_method: "manual",
       notes: "",
       secret_reference_id: "",
+      account_secret_id: "",
     }
     expect(variableSchema.parse(base)).toMatchObject({
       name: "DATABASE_URL",
       secret_reference_id: null,
+      account_secret_id: null,
     })
+    // The value lives in one place: the vault or another vault, not both (Plan P12.3).
+    const ids = {
+      secret_reference_id: "11111111-1111-4111-8111-111111111111",
+      account_secret_id: "22222222-2222-4222-8222-222222222222",
+    }
+    expect(variableSchema.safeParse({ ...base, ...ids }).success).toBe(false)
+    expect(
+      variableSchema.safeParse({ ...base, account_secret_id: ids.account_secret_id }).success,
+    ).toBe(true)
     expect(variableSchema.safeParse({ ...base, verification_method: "integration" }).success).toBe(
       false,
     )

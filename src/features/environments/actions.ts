@@ -230,6 +230,7 @@ function readVariable(formData: FormData) {
     verification_method: text(formData, "verification_method") || "manual",
     notes: text(formData, "notes"),
     secret_reference_id: text(formData, "secret_reference_id"),
+    account_secret_id: text(formData, "account_secret_id"),
   }
 }
 
@@ -412,6 +413,7 @@ export async function createSecretReference(
   if (error || !data) return dbError(error, "") as FormState<{ id: string }>
 
   revalidatePath("/environments", "layout")
+  revalidatePath("/accounts")
   return { status: "success", message: "Secret reference added.", data: { id: data.id } }
 }
 
@@ -434,6 +436,7 @@ export async function updateSecretReference(
   if (error) return dbError(error, "")
   if (!data?.length) return { status: "error", message: "Reference not found." }
   revalidatePath("/environments", "layout")
+  revalidatePath("/accounts")
   return { status: "success", message: "Secret reference saved." }
 }
 
@@ -444,6 +447,7 @@ export async function deleteSecretReference(referenceId: string): Promise<Action
   const { error } = await supabase.from("secret_references").delete().eq("id", referenceId)
   if (error) return { ok: false, error: "Couldn't remove the reference." }
   revalidatePath("/environments", "layout")
+  revalidatePath("/accounts")
   return { ok: true }
 }
 
@@ -458,6 +462,7 @@ function readService(formData: FormData) {
     dashboard_url: text(formData, "dashboard_url"),
     documentation_url: text(formData, "documentation_url"),
     notes: text(formData, "notes"),
+    account_id: text(formData, "account_id"),
   }
 }
 
@@ -472,12 +477,51 @@ export async function createService(
 
   await requireUser()
   const supabase = await createClient()
-  const { error } = await supabase
-    .from("project_services")
-    .insert({ ...parsed.data, project_id: projectId })
-  if (error) return dbError(error, "This project already has a service with that name")
+  const environmentIds = formData
+    .getAll("environment_ids")
+    .map(String)
+    .filter((v) => isUuid(v))
+
+  if (environmentIds.length === 0) {
+    const { error } = await supabase
+      .from("project_services")
+      .insert({ ...parsed.data, project_id: projectId })
+    if (error) return dbError(error, "This project already has a service with that name")
+    revalidate(projectId)
+    return { status: "success", message: `Added ${parsed.data.name}.` }
+  }
+
+  // One step (Plan P12.1): the service and its environment links, all or nothing.
+  const { data: serviceId, error } = await supabase.rpc("add_project_service", {
+    p_project_id: projectId,
+    p_name: parsed.data.name,
+    p_category: parsed.data.category,
+    p_provider: parsed.data.provider,
+    p_account_id: parsed.data.account_id,
+    p_environment_ids: environmentIds,
+  })
+  if (error || !serviceId) {
+    return dbError(error, "This project already has a service with that name")
+  }
+  const { purpose, dashboard_url, documentation_url, notes } = parsed.data
+  if (purpose || dashboard_url || documentation_url || notes) {
+    const extra = await supabase
+      .from("project_services")
+      .update({ purpose, dashboard_url, documentation_url, notes })
+      .eq("id", serviceId)
+    if (extra.error) {
+      revalidate(projectId)
+      return {
+        status: "error",
+        message: `Added ${parsed.data.name}, but its notes and links weren't saved. Edit it to add them.`,
+      }
+    }
+  }
   revalidate(projectId)
-  return { status: "success", message: `Added ${parsed.data.name}.` }
+  return {
+    status: "success",
+    message: `Added ${parsed.data.name} to ${environmentIds.length} ${environmentIds.length === 1 ? "environment" : "environments"}.`,
+  }
 }
 
 export async function updateService(

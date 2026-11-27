@@ -4,6 +4,7 @@ import { Suspense } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { LoginForm } from "@/features/auth/components/login-form"
 import { WipeOfflineData } from "@/features/offline/components/wipe-offline-data"
+import { LockVault } from "@/features/vault/store"
 
 export const metadata: Metadata = { title: "Sign in" }
 
@@ -13,6 +14,7 @@ export default function LoginPage() {
     <>
       {/* Every way out of a session lands here, so the device's offline copy is deleted here. */}
       <WipeOfflineData />
+      <LockVault />
       <Suspense fallback={<Skeleton className="h-72 w-full" />}>
         <LoginForm />
       </Suspense>

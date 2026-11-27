@@ -10,7 +10,7 @@ const TABS = [
   { label: "Tasks", segment: "tasks" },
   { label: "Repositories", segment: "repositories" },
   { label: "Environments", segment: "environments" },
-  { label: "Services", segment: "services" },
+  { label: "Accounts & services", segment: "services" },
   { label: "Documentation", segment: "documentation" },
   { label: "Activity", segment: "activity" },
 ] as const

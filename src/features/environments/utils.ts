@@ -113,6 +113,7 @@ export type ComparisonVariable = {
   verification_method: VerificationMethod
   last_verified_at: string | null
   secret_reference_id: string | null
+  account_secret_id: string | null
 }
 
 export type ComparisonCell =
@@ -124,6 +125,7 @@ export type ComparisonCell =
       method: VerificationMethod
       verifiedAt: string | null
       hasReference: boolean
+      inVault: boolean
     }
 
 export type ComparisonRow = {
@@ -162,6 +164,7 @@ export function buildComparison(
       method: v.verification_method,
       verifiedAt: v.last_verified_at,
       hasReference: v.secret_reference_id !== null,
+      inVault: v.account_secret_id !== null,
     }
     byName.set(v.name, row)
   }

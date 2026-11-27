@@ -23,6 +23,7 @@ export const SEARCH_KINDS = [
   "environment",
   "variable",
   "service",
+  "account",
   "repository",
   "technology",
 ] as const
@@ -36,6 +37,7 @@ export const SEARCH_KIND_LABELS: Record<SearchKind, string> = {
   environment: "Environments",
   variable: "Environment variables",
   service: "Services",
+  account: "Accounts",
   repository: "Repositories",
   technology: "Technologies",
 }
@@ -88,6 +90,9 @@ export function metaLabel(kind: SearchKind, meta: string | null): string | null 
       return null
     case "service":
       return lookup(SERVICE_CATEGORY_LABELS, meta)
+    case "account":
+      // The excerpt shows the login; never anything from the vault.
+      return null
     case "repository":
       return lookup(REPOSITORY_PROVIDER_LABELS, meta)
     case "technology":
@@ -115,6 +120,8 @@ export function resultHref(row: SearchRow & { kind: SearchKind }): string {
       return row.parent_id ? `/environments/${row.parent_id}` : `/projects/${project}/environments`
     case "service":
       return `/projects/${project}/services`
+    case "account":
+      return `/accounts/${row.id}`
     case "repository":
       return `/projects/${project}/repositories`
     case "technology":

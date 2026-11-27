@@ -32,6 +32,7 @@ import {
 import { cn } from "@/lib/utils"
 import {
   DEFAULT_TASK_VIEW,
+  LIST_ONLY_VIEWS,
   TASK_VIEWS,
   TASK_VIEW_LABELS,
   parseTaskFilters,
@@ -118,7 +119,15 @@ export function TaskFilters({
             />
           ))}
         </nav>
-        <div className="flex items-center gap-1 self-start rounded-lg border p-0.5" role="group">
+        {/* Completed and Archived are always lists (Plan P10.1), so they have no switch. */}
+        <div
+          className={cn(
+            "flex items-center gap-1 self-start rounded-lg border p-0.5",
+            LIST_ONLY_VIEWS.includes(filters.view) && "hidden",
+          )}
+          role="group"
+          aria-label="Layout"
+        >
           <Button
             variant={filters.layout === "list" ? "secondary" : "ghost"}
             size="sm"
@@ -233,7 +242,10 @@ export function TaskFilters({
             onToggle={(v) => toggle("flags", filters.flags, v)}
           />
 
-          {filters.view !== "completed" && filters.view !== "upcoming" ? (
+          {/* The board orders each column itself, so sorting is a list-only control. */}
+          {filters.layout === "list" &&
+          filters.view !== "completed" &&
+          filters.view !== "upcoming" ? (
             <Select
               value={filters.sort}
               onValueChange={(v) => update({ sort: v === defaults.sort ? null : v })}

@@ -24,6 +24,7 @@ import {
   listServiceOptions,
 } from "@/features/environments/queries"
 import { formatRuntimeVersions, needsReview } from "@/features/environments/utils"
+import { hasVault, listVaultItemOptions } from "@/features/vault/queries"
 import { ENVIRONMENT_TYPE_META } from "@/lib/constants/domain"
 import { formatDateTime } from "@/lib/format"
 import { requestTime } from "@/lib/request-time"
@@ -101,14 +102,17 @@ function UrlValue({ href }: { href: string | null }) {
 
 async function EnvironmentDetail({ environmentId }: { environmentId: string }) {
   const env = await getEnvironment(environmentId)
-  const [variables, references, instances, services, profile, renderedAt] = await Promise.all([
-    listEnvironmentVariables(env.id),
-    listSecretReferences(),
-    listEnvironmentInstances(env.id),
-    listServiceOptions(env.project_id),
-    getMyProfile(),
-    requestTime(),
-  ])
+  const [variables, references, vaultItems, vaultReady, instances, services, profile, renderedAt] =
+    await Promise.all([
+      listEnvironmentVariables(env.id),
+      listSecretReferences(),
+      listVaultItemOptions(),
+      hasVault(),
+      listEnvironmentInstances(env.id),
+      listServiceOptions(env.project_id),
+      getMyProfile(),
+      requestTime(),
+    ])
   const tz = profile.timezone
   const archived = env.status === "archived"
   const production = env.environment_type === "production"
@@ -178,11 +182,13 @@ async function EnvironmentDetail({ environmentId }: { environmentId: string }) {
               environmentId={env.id}
               variables={variables}
               references={references}
+              vaultItems={vaultItems}
+              hasVault={vaultReady}
               readOnly={archived}
             />
           </Section>
 
-          <Section title="Services" id="services-heading">
+          <Section title="Uses" id="services-heading">
             <EnvironmentInstances
               projectId={env.project.id}
               environmentId={env.id}

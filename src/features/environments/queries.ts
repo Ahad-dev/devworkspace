@@ -118,7 +118,7 @@ export async function listEnvironmentVariables(environmentId: string) {
   const { data, error } = await supabase
     .from("environment_variables")
     .select(
-      "id, name, is_required, is_sensitive, configuration_status, verification_method, last_verified_at, notes, secret_reference_id",
+      "id, name, is_required, is_sensitive, configuration_status, verification_method, last_verified_at, notes, secret_reference_id, account_secret_id",
     )
     .eq("environment_id", environmentId)
     .order("name")
@@ -157,7 +157,7 @@ export async function getComparisonData(projectId: string, environmentIds: strin
       ? supabase
           .from("environment_variables")
           .select(
-            "environment_id, name, is_required, is_sensitive, configuration_status, verification_method, last_verified_at, secret_reference_id",
+            "environment_id, name, is_required, is_sensitive, configuration_status, verification_method, last_verified_at, secret_reference_id, account_secret_id",
           )
           .eq("project_id", projectId)
           .in("environment_id", ids)

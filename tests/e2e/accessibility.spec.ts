@@ -132,7 +132,7 @@ test("axe: no violations on the main pages, light and dark", async ({ page }) =>
   const pages = [
     "/dashboard",
     "/my-work",
-    "/my-work?layout=board",
+    "/my-work?layout=list",
     "/projects",
     `/projects/${ids.project}`,
     `/projects/${ids.project}/tasks`,

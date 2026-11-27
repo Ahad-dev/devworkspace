@@ -198,6 +198,7 @@ describe("environments, services and configuration metadata", () => {
       expect(error).toBeNull()
       expect(Object.keys(data!).sort()).toEqual(
         [
+          "account_secret_id",
           "configuration_status",
           "created_at",
           "environment_id",

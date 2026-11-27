@@ -66,11 +66,13 @@ test("project lifecycle with repositories and technologies", async ({ page }) =>
   await page.getByRole("menuitem", { name: "Restore" }).click()
   await expect(page.getByText("Active", { exact: true }).first()).toBeVisible()
 
-  // Activity recorded the lifecycle.
+  // Activity recorded the lifecycle. A production build keeps the Overview (which also lists recent
+  // activity) in the DOM, hidden, for back navigation, so match only what is on screen.
   await page.getByRole("link", { name: "Activity", exact: true }).click()
-  await expect(page.getByText(`Restored project ${name}`)).toBeVisible()
-  await expect(page.getByText(`Archived project ${name}`)).toBeVisible()
-  await expect(page.getByText("Added repository api")).toBeVisible()
+  const shown = (text: string) => page.getByText(text).filter({ visible: true })
+  await expect(shown(`Restored project ${name}`)).toBeVisible()
+  await expect(shown(`Archived project ${name}`)).toBeVisible()
+  await expect(shown("Added repository api")).toBeVisible()
 
   // Delete with confirmation (lists what goes with it).
   await page.getByRole("button", { name: "More project actions" }).click()

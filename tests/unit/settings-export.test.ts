@@ -21,6 +21,8 @@ import type { Database } from "@/types/database.types"
 describe("data export", () => {
   it("covers every table in the schema exactly once", () => {
     const tables: (keyof Database["public"]["Tables"])[] = [
+      "account_secrets",
+      "accounts",
       "activity_events",
       "command_snippets",
       "document_attachments",
@@ -41,6 +43,7 @@ describe("data export", () => {
       "task_labels",
       "task_links",
       "tasks",
+      "vault_keys",
       "work_handoffs",
       "work_session_segments",
       "work_sessions",
@@ -50,6 +53,8 @@ describe("data export", () => {
     const order = EXPORT_TABLES.map((t) => t.table)
     expect(order.indexOf("projects")).toBeLessThan(order.indexOf("tasks"))
     expect(order.indexOf("documents")).toBeLessThan(order.indexOf("document_attachments"))
+    expect(order.indexOf("vault_keys")).toBeLessThan(order.indexOf("account_secrets"))
+    expect(order.indexOf("accounts")).toBeLessThan(order.indexOf("project_services"))
   })
 
   it("builds a versioned file without derived columns", () => {
@@ -114,6 +119,10 @@ describe("default task view", () => {
     expect(parseTaskFilters({}, board)).toMatchObject({ layout: "board", sort: "due" })
     expect(parseTaskFilters({ layout: "list" }, board)).toMatchObject({ layout: "list" })
     expect(parseTaskFilters({ sort: "title" }, board)).toMatchObject({ sort: "title" })
-    expect(parseTaskFilters({})).toMatchObject({ layout: "list", sort: "priority" })
+    expect(parseTaskFilters({})).toMatchObject({ layout: "board", sort: "priority" })
+    // A saved list preference still wins over the board default.
+    expect(parseTaskViewPreference({ task_view: { layout: "list" } })).toMatchObject({
+      layout: "list",
+    })
   })
 })

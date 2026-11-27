@@ -91,16 +91,23 @@ export const variableNameSchema = z
     "Use letters, digits and underscores, starting with a letter or underscore (e.g. DATABASE_URL)",
   )
 
-export const variableSchema = z.object({
-  name: variableNameSchema,
-  is_required: z.boolean(),
-  is_sensitive: z.boolean(),
-  configuration_status: z.enum(CONFIGURATION_STATUSES, "Choose a status"),
-  // "integration" is reserved for a server-side integration (the database refuses it too).
-  verification_method: z.enum(["manual", "imported"], "Choose how this was established"),
-  notes: optionalText(2000),
-  secret_reference_id: optionalUuid,
-})
+export const variableSchema = z
+  .object({
+    name: variableNameSchema,
+    is_required: z.boolean(),
+    is_sensitive: z.boolean(),
+    configuration_status: z.enum(CONFIGURATION_STATUSES, "Choose a status"),
+    // "integration" is reserved for a server-side integration (the database refuses it too).
+    verification_method: z.enum(["manual", "imported"], "Choose how this was established"),
+    notes: optionalText(2000),
+    secret_reference_id: optionalUuid,
+    // "In my vault" (Plan P12.3): the account secret that holds the value. One place or the other.
+    account_secret_id: optionalUuid,
+  })
+  .refine((v) => !(v.secret_reference_id && v.account_secret_id), {
+    path: ["account_secret_id"],
+    message: "Pick one place where the value is stored",
+  })
 
 export type VariableInput = z.infer<typeof variableSchema>
 
@@ -126,6 +133,11 @@ export const serviceSchema = z.object({
   dashboard_url: optionalUrl,
   documentation_url: optionalUrl,
   notes: optionalText(10000),
+  // The account it runs under (Plan P11.4); "none" or empty clears it.
+  account_id: z
+    .string()
+    .transform((v) => (v === "" || v === "none" ? null : v))
+    .pipe(z.uuid("Choose an account").nullable()),
 })
 
 export type ServiceInput = z.infer<typeof serviceSchema>

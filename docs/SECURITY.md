@@ -3,12 +3,15 @@
 DevWorkspace stores **context about** infrastructure, not the keys to it. These rules come from the
 Spec (§9) and are enforced in code, in the database, and in review.
 
-## 1. Secrets never enter DevWorkspace
+## 1. Secrets never enter DevWorkspace in plain form
+
+The only exception is the end-to-end encrypted Accounts vault (§8): secret values stored there exist on the
+server only as ciphertext made in the owner's browser.
 
 Allowed: environment-variable **names**, required/sensitive flags, configuration status, safe notes,
 vault provider + locator (e.g. Infisical project/path/key name), non-secret URLs and hostnames.
 
-Never stored in any table, form, log, URL, activity entry or browser storage:
+Never stored in plain form in any table, form, log, URL, activity entry or browser storage:
 
 - API keys, passwords, tokens (OAuth, PAT, JWT), private/signing keys, SSH keys
 - Connection strings that contain credentials (`postgres://user:pass@…`)
@@ -108,7 +111,35 @@ How this is enforced:
   `worker-src 'self'` and `manifest-src 'self'`.
 - **Edits offline** are never queued: they fail with "You're offline. Reconnect to save this change."
 
-## 8. Reporting
+## 8. Accounts vault (Phase 11)
+
+The owner decided (2026-11-27, Plan §10) that DevWorkspace keeps the credentials for their platform accounts
+(Neon, Resend, Vercel…) itself, overriding Spec §2.3 and §9.3. It is built so the server never holds anything
+readable:
+
+- **Zero-knowledge.** A random 256-bit vault key encrypts every item (AES-256-GCM, a fresh 12-byte IV per write,
+  associated data binding the item to its id and account, plaintext padded to hide its exact length). The vault
+  key is stored only wrapped: by a key derived from the **master password** (PBKDF2-SHA256, 600,000 iterations,
+  random salt) and by a key derived from the printable **recovery key** (32 random bytes, HKDF). All of it runs
+  in the browser with WebCrypto; there is no crypto dependency.
+- **What the server sees.** Ciphertext, IVs, salts, wrapped keys and non-secret metadata: platform, label, login
+  email or username, login URL, two-factor method, notes, and each item's label and kind. Vault writes are typed
+  JSON actions that accept ciphertext only; secret inputs have no `name` attribute, so a form can never post them.
+- **In the browser.** After unlock the vault key is held in memory as a non-extractable key, never in storage,
+  React props, URLs or logs. The vault locks after 15 minutes idle, when the page is hidden for good (`pagehide`),
+  on sign-out, on the sign-in page and in every tab at once. Revealed values hide again after 30 seconds; copied
+  values are cleared from the clipboard after 30 seconds where the browser allows it.
+- **Never included:** activity metadata, global search, the offline copy of tasks, the service-worker cache.
+  Exports contain the vault tables **encrypted** (readable only with the master password or recovery key).
+- **Limits, stated plainly.** The vault protects against anyone who reads the database, a backup, an export,
+  Supabase or Vercel. It does **not** protect against compromised app code (a malicious deploy or dependency, an
+  XSS bug), a malicious browser extension or an infected device while the vault is unlocked: such code could ask
+  the browser to decrypt. Forgetting both the master password and the recovery key loses the stored secrets for
+  good; nobody can reset them. Windows clipboard history and cloud clipboards may keep copied values.
+- **Advice to the owner.** Use a master password you use nowhere else (not the DevWorkspace sign-in password),
+  keep the recovery key offline, and lock the vault on shared computers.
+
+## 9. Reporting
 
 Found something that breaks these rules? Treat it as a bug with top priority: fix it, add a test,
 and note it in the Plan's decision log.

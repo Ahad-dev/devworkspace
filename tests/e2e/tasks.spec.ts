@@ -88,8 +88,9 @@ test("task lifecycle: capture, full form, board and list moves, blocked details"
   await expect(page.getByText("Waiting for the client to grant repo access")).toBeVisible()
   await expect(page.getByText("Ask for the staging credentials location")).toBeVisible()
 
-  // Detail page: unblock to In Progress, then the next action can be edited.
-  await moveWithMenu(page, fullTitle, "In Progress")
+  // Detail page: unblock to In Progress, then the next action can be edited. Wait for the save:
+  // reloading while it is in flight would abort it.
+  await moveAndSave(page, fullTitle, "In Progress")
   await expect(
     page.getByRole("button", { name: `Status: In Progress. Change status of ${fullTitle}` }),
   ).toBeVisible()
@@ -142,7 +143,7 @@ test("task lifecycle: capture, full form, board and list moves, blocked details"
   })
 
   // List: finish it, then it leaves the open queue and shows under Completed.
-  await page.goto(`/projects/${projectId}/tasks`)
+  await page.goto(`/projects/${projectId}/tasks?layout=list`)
   await moveAndSave(page, quickTitle, "Done")
   await expect(page.getByRole("link", { name: quickTitle })).toHaveCount(0, { timeout: 30_000 })
   await page.getByRole("button", { name: "Completed" }).click()

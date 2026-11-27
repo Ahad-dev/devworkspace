@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { MoreDetails } from "@/components/shared/more-details"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
@@ -335,6 +336,22 @@ function CommandDialog({
     initialFormState,
   )
   const err = (k: string) => toFieldErrors(state.fieldErrors?.[k])
+  // Fold the extras unless one is filled in or has an error (Plan P10.4).
+  const hasMore =
+    Boolean(
+      command &&
+      (command.shell !== "bash" ||
+        command.operating_system !== "cross_platform" ||
+        command.category !== "other" ||
+        command.repository_id ||
+        command.environment_id ||
+        command.description ||
+        command.prerequisites ||
+        (!projectId && command.project_id)),
+    ) ||
+    ["description", "prerequisites", "project_id", "repository_id", "environment_id"].some((k) =>
+      Boolean(state.fieldErrors?.[k]),
+    )
   const secretWarning = secretMessage(text)
   const reasons = destructiveReasons(text)
 
@@ -419,92 +436,6 @@ function CommandDialog({
               <FieldError errors={err("command_text")} />
             </Field>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Field>
-                <FieldLabel htmlFor="cmd-shell">Shell</FieldLabel>
-                <Select name="shell" defaultValue={command?.shell ?? "bash"}>
-                  <SelectTrigger id="cmd-shell" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COMMAND_SHELLS.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {COMMAND_SHELL_LABELS[s]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="cmd-os">Operating system</FieldLabel>
-                <Select
-                  name="operating_system"
-                  defaultValue={command?.operating_system ?? "cross_platform"}
-                >
-                  <SelectTrigger id="cmd-os" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COMMAND_OSES.map((o) => (
-                      <SelectItem key={o} value={o}>
-                        {COMMAND_OS_LABELS[o]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="cmd-category">Category</FieldLabel>
-                <Select name="category" defaultValue={command?.category ?? "other"}>
-                  <SelectTrigger id="cmd-category" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COMMAND_CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {COMMAND_CATEGORY_LABELS[c]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-            </div>
-
-            <LinkFields
-              idPrefix="cmd"
-              options={options}
-              value={links}
-              onChange={setLinks}
-              fixedProject={Boolean(projectId)}
-              errors={state.fieldErrors}
-            />
-
-            <Field data-invalid={Boolean(state.fieldErrors?.description)}>
-              <FieldLabel htmlFor="cmd-description">Description</FieldLabel>
-              <Textarea
-                id="cmd-description"
-                name="description"
-                defaultValue={command?.description ?? ""}
-                rows={2}
-                maxLength={2000}
-                placeholder="What it does and when to use it"
-              />
-              <FieldError errors={err("description")} />
-            </Field>
-
-            <Field data-invalid={Boolean(state.fieldErrors?.prerequisites)}>
-              <FieldLabel htmlFor="cmd-prereq">Prerequisites and warnings</FieldLabel>
-              <Textarea
-                id="cmd-prereq"
-                name="prerequisites"
-                defaultValue={command?.prerequisites ?? ""}
-                rows={2}
-                maxLength={2000}
-                placeholder="e.g. Run from the repo root. Needs SUPABASE_ACCESS_TOKEN set."
-              />
-              <FieldError errors={err("prerequisites")} />
-            </Field>
-
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -519,6 +450,94 @@ function CommandDialog({
               </div>
               <FieldDescription>Shown as a warning wherever the command appears.</FieldDescription>
             </div>
+
+            <MoreDetails open={hasMore} hint="shell, project links, description">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field>
+                  <FieldLabel htmlFor="cmd-shell">Shell</FieldLabel>
+                  <Select name="shell" defaultValue={command?.shell ?? "bash"}>
+                    <SelectTrigger id="cmd-shell" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMMAND_SHELLS.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {COMMAND_SHELL_LABELS[s]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="cmd-os">Operating system</FieldLabel>
+                  <Select
+                    name="operating_system"
+                    defaultValue={command?.operating_system ?? "cross_platform"}
+                  >
+                    <SelectTrigger id="cmd-os" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMMAND_OSES.map((o) => (
+                        <SelectItem key={o} value={o}>
+                          {COMMAND_OS_LABELS[o]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="cmd-category">Category</FieldLabel>
+                  <Select name="category" defaultValue={command?.category ?? "other"}>
+                    <SelectTrigger id="cmd-category" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMMAND_CATEGORIES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {COMMAND_CATEGORY_LABELS[c]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+
+              <LinkFields
+                idPrefix="cmd"
+                options={options}
+                value={links}
+                onChange={setLinks}
+                fixedProject={Boolean(projectId)}
+                errors={state.fieldErrors}
+              />
+
+              <Field data-invalid={Boolean(state.fieldErrors?.description)}>
+                <FieldLabel htmlFor="cmd-description">Description</FieldLabel>
+                <Textarea
+                  id="cmd-description"
+                  name="description"
+                  defaultValue={command?.description ?? ""}
+                  rows={2}
+                  maxLength={2000}
+                  placeholder="What it does and when to use it"
+                />
+                <FieldError errors={err("description")} />
+              </Field>
+
+              <Field data-invalid={Boolean(state.fieldErrors?.prerequisites)}>
+                <FieldLabel htmlFor="cmd-prereq">Prerequisites and warnings</FieldLabel>
+                <Textarea
+                  id="cmd-prereq"
+                  name="prerequisites"
+                  defaultValue={command?.prerequisites ?? ""}
+                  rows={2}
+                  maxLength={2000}
+                  placeholder="e.g. Run from the repo root. Needs SUPABASE_ACCESS_TOKEN set."
+                />
+                <FieldError errors={err("prerequisites")} />
+              </Field>
+            </MoreDetails>
           </FieldGroup>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onClose}>

@@ -9,6 +9,8 @@ import { ProfileForm } from "@/features/profile/components/profile-form"
 import { getMyProfile } from "@/features/profile/queries"
 import { DeleteAccountDialog } from "@/features/settings/components/delete-account-dialog"
 import { DevicePanel } from "@/features/settings/components/device-panel"
+import { VaultSettings } from "@/features/vault/components/vault-settings"
+import { hasVault } from "@/features/vault/queries"
 import { ExportPanel } from "@/features/settings/components/export-panel"
 import { SecurityPanel } from "@/features/settings/components/security-panel"
 import { TaskViewForm } from "@/features/settings/components/task-view-form"
@@ -114,6 +116,16 @@ export default function Page() {
         </SettingsSection>
 
         <SettingsSection
+          id="vault-heading"
+          title="Password vault"
+          description="The encrypted store for your accounts' passwords and keys."
+        >
+          <Suspense fallback={<Skeleton className="h-16 w-full" />}>
+            <VaultSettingsSection />
+          </Suspense>
+        </SettingsSection>
+
+        <SettingsSection
           id="device-heading"
           title="This device"
           description="Install the app, and the copy of your tasks this browser keeps for offline reading."
@@ -163,6 +175,10 @@ async function TaskViewSettings() {
 async function SecuritySettings() {
   const profile = await getMyProfile()
   return <SecurityPanel email={profile.email} />
+}
+
+async function VaultSettingsSection() {
+  return <VaultSettings hasVault={await hasVault()} />
 }
 
 async function DeleteSettings() {

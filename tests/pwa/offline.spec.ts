@@ -1,18 +1,31 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Page } from "@playwright/test"
 
+import { createVault, encryptItem } from "../../src/features/vault/crypto"
 import { signIn } from "../e2e/helpers"
 import { createTestUser, deleteTestUser, type TestUser } from "../support/supabase"
 
 /**
- * Spec §2.2 "PWA/offline"; Plan P9.5. On a production build: the install files are public, the
- * service worker keeps no workspace pages, the saved copy of tasks reads offline in place of the
- * live pages, an edit made offline says so instead of failing, and signing out deletes the copy.
+ * Spec §2.2 "PWA/offline"; Plan P9.5, P11.5. On a production build: the install files are public,
+ * the service worker keeps no workspace pages, the saved copy of tasks reads offline in place of
+ * the live pages, an edit made offline says so instead of failing, signing out deletes the copy,
+ * and nothing from Accounts or the vault ends up in the copy or the caches.
  */
+
+type Untyped = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  from: (t: string) => any
+}
 
 let user: TestUser
 const ids: Record<string, string> = {}
 const TITLE = "Offline readable task"
+const VAULT = {
+  platform: `Vaultmarker${Date.now().toString(36)}`,
+  login: `vault-marker-${Date.now().toString(36)}@example.com`,
+  secret: `offline-secret-${crypto.randomUUID()}`,
+  ciphertext: "",
+}
 
 test.describe.configure({ mode: "serial" })
 
@@ -42,6 +55,31 @@ test.beforeAll(async () => {
   if (taskError) throw new Error(taskError.message)
   ids.task = task.id
   await c.from("task_comments").insert({ task_id: ids.task, content: "A comment to read offline" })
+
+  // A vault with one stored value: none of it may reach the device copy or the caches.
+  const db = c as unknown as Untyped
+  const vault = await createVault(user.id, `pwa master ${crypto.randomUUID()}`)
+  expect((await db.from("vault_keys").insert(vault.record)).error).toBeNull()
+  const { data: account } = await db
+    .from("accounts")
+    .insert({ platform: VAULT.platform, login_identifier: VAULT.login })
+    .select("id")
+    .single()
+  const secretId = crypto.randomUUID()
+  const sealed = await encryptItem(
+    vault.sessionKey,
+    { secretId, accountId: account.id },
+    VAULT.secret,
+  )
+  VAULT.ciphertext = sealed.ciphertext
+  const item = await db.from("account_secrets").insert({
+    id: secretId,
+    account_id: account.id,
+    label: "Password",
+    kind: "password",
+    ...sealed,
+  })
+  expect(item.error).toBeNull()
   await c.auth.signOut({ scope: "local" })
 })
 
@@ -67,6 +105,29 @@ const copyTitles = (page: Page) =>
           get.onerror = () => {
             db.close()
             resolve([])
+          }
+        }
+      }),
+  )
+
+/** Everything in the offline database, as text. */
+const copyDump = (page: Page) =>
+  page.evaluate(
+    () =>
+      new Promise<string>((resolve) => {
+        const open = indexedDB.open("devworkspace-offline", 1)
+        open.onupgradeneeded = () => open.result.createObjectStore("snapshot")
+        open.onerror = () => resolve("")
+        open.onsuccess = () => {
+          const db = open.result
+          const all = db.transaction("snapshot").objectStore("snapshot").getAll()
+          all.onsuccess = () => {
+            db.close()
+            resolve(JSON.stringify(all.result))
+          }
+          all.onerror = () => {
+            db.close()
+            resolve("")
           }
         }
       }),
@@ -110,6 +171,17 @@ test("reads the saved copy offline; edits say they need a connection", async ({
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined))
   await expect.poll(() => copyTitles(page), { timeout: 30_000 }).toContain(TITLE)
 
+  // Visiting Accounts adds nothing from it to the device copy (Plan P11.5).
+  await page.goto("/accounts")
+  await expect(page.getByRole("link", { name: VAULT.platform })).toBeVisible({ timeout: 30_000 })
+  await page.goto("/my-work")
+  await expect.poll(() => copyTitles(page), { timeout: 30_000 }).toContain(TITLE)
+  const dump = await copyDump(page)
+  expect(dump).toContain(TITLE)
+  for (const marker of [VAULT.platform, VAULT.login, VAULT.secret, VAULT.ciphertext]) {
+    expect(dump).not.toContain(marker)
+  }
+
   // The worker keeps only the offline page and build files, and that page holds no user data.
   const cached = await page.evaluate(async () => {
     const paths: string[] = []
@@ -125,6 +197,7 @@ test("reads the saved copy offline; edits say they need a connection", async ({
   ).toEqual(["/offline"])
   expect(cached.shell).not.toContain(user.email)
   expect(cached.shell).not.toContain(TITLE)
+  expect(cached.shell).not.toContain(VAULT.platform)
 
   // Offline: reloading a workspace page shows the saved copy in its place.
   await context.setOffline(true)

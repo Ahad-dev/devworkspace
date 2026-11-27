@@ -45,8 +45,15 @@ async function ProjectEnvironments({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold">Environments</h2>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-base font-semibold">Environments</h2>
+          {/* Plain-language explanation (Plan P10.5). */}
+          <p className="text-sm text-muted-foreground">
+            The places this project runs, such as your computer, staging and production. Each one
+            lists its address, the variable names it needs and the services it uses.
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Link
             href={`/environments/compare?project=${project.id}`}

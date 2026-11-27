@@ -4,20 +4,24 @@ import type { Database } from "@/types/database.types"
 /**
  * Data export (Spec FR-14, §9.6; Plan P8.1). The browser reads the signed-in user's rows straight
  * from Supabase (RLS decides what's theirs) and builds the files itself, so nothing large passes
- * through a server function. There are no secret values to export: DevWorkspace stores names and
- * vault locations only.
+ * through a server function. Secret values appear only as the Accounts vault's ciphertext (Plan P11.1),
+ * exported encrypted: the file can be read only with the vault's master password or recovery key.
  */
 
-export const EXPORT_SCHEMA_VERSION = 1
+// 2: adds the Accounts vault tables (vault_keys, accounts, account_secrets) and project_services.account_id.
+export const EXPORT_SCHEMA_VERSION = 2
 
 export const EXPORT_NOTICE =
-  "This export contains your DevWorkspace records: names, statuses, notes and metadata. It does not contain secret values (DevWorkspace never stores them) or anything held in external vaults such as Infisical, Doppler or 1Password. Secret references point to those vaults; export the secrets from the vaults themselves if you need them."
+  "This export contains your DevWorkspace records: names, statuses, notes and metadata. It does not contain secret values in readable form: passwords and keys kept in your DevWorkspace vault are included only encrypted (vault_keys, account_secrets), and can be read only with your master password or recovery key, so keep this file as safe as the vault. Anything held in external vaults such as Infisical, Doppler or 1Password is not included; secret references point to those vaults."
 
 type TableName = keyof Database["public"]["Tables"]
 
 /** Every table that holds the user's data, parents first, with a stable order for paging. */
 export const EXPORT_TABLES: { table: TableName; orderBy: string[] }[] = [
   { table: "profiles", orderBy: ["id"] },
+  { table: "vault_keys", orderBy: ["id"] },
+  { table: "accounts", orderBy: ["id"] },
+  { table: "account_secrets", orderBy: ["id"] },
   { table: "projects", orderBy: ["id"] },
   { table: "repositories", orderBy: ["id"] },
   { table: "project_technologies", orderBy: ["id"] },

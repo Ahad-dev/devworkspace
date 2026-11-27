@@ -35,13 +35,13 @@ const COPY: Record<HandoffMode, { title: string; submit: string; done: string; b
     title: "Pause and hand off",
     submit: "Pause session",
     done: "Session paused",
-    blurb: "Leave notes for when you pick this up again. Every field is optional.",
+    blurb: "Note the next step so you can pick this up again.",
   },
   complete: {
     title: "Finish session",
     submit: "Finish session",
     done: "Session finished",
-    blurb: "Record where things stand. Every field is optional.",
+    blurb: "Note what comes next, if anything.",
   },
   save: {
     title: "Save progress",
@@ -65,6 +65,9 @@ const EMPTY: HandoffPayload = {
  * Handoff form (Spec FR-07, §5.4), opened on pause, finish and "Save progress". Saving creates an
  * immutable snapshot; "Update the task's next action" copies it to the task (on by default).
  * `allowEndTime` adds "Stopped working at" for sessions left running (Plan P4.7).
+ *
+ * Pause and Finish are quick (Plan P10.3): the next action and one checkbox, with the full set of
+ * notes behind "Add more notes". The values live in state, so hiding the notes never loses them.
  */
 export function HandoffDialog({
   open,
@@ -92,6 +95,8 @@ export function HandoffDialog({
   const [updateTask, setUpdateTask] = React.useState(true)
   const [endedAt, setEndedAt] = React.useState("")
   const [result, setResult] = React.useState<SessionResult | null>(null)
+  // "Save progress" is the full snapshot; Pause and Finish start short.
+  const [showNotes, setShowNotes] = React.useState(mode === "save")
   const [pending, startTransition] = React.useTransition()
   const copy = COPY[mode]
 
@@ -120,6 +125,13 @@ export function HandoffDialog({
         offlineResult,
       )
       setResult(r)
+      // An error on one of the extra notes must be visible to be fixed.
+      if (
+        !r.ok &&
+        Object.keys(r.fieldErrors ?? {}).some((k) => k !== "next_action" && k !== "form")
+      ) {
+        setShowNotes(true)
+      }
       if (r.ok) {
         toast.success(copy.done)
         onOpenChange(false)
@@ -173,131 +185,146 @@ export function HandoffDialog({
               </Label>
             </div>
 
-            <TextField
-              id="handoff-completed"
-              label="Completed"
-              placeholder="What got done in this session"
-              value={values.completed_summary}
-              onChange={set("completed_summary")}
-              max={10000}
-              errors={err("completed_summary")}
-            />
-            <TextField
-              id="handoff-state"
-              label="Current state"
-              placeholder="What works now, what's mid-change"
-              value={values.current_state}
-              onChange={set("current_state")}
-              max={10000}
-              errors={err("current_state")}
-            />
-            <TextField
-              id="handoff-remaining"
-              label="Remaining"
-              placeholder="What isn't finished yet"
-              value={values.remaining_work}
-              onChange={set("remaining_work")}
-              max={10000}
-              errors={err("remaining_work")}
-            />
-            <TextField
-              id="handoff-blockers"
-              label="Blockers"
-              placeholder="Anything stopping progress"
-              value={values.blockers}
-              onChange={set("blockers")}
-              max={2000}
-              errors={err("blockers")}
-            />
-            <TextField
-              id="handoff-notes"
-              label="Technical notes"
-              placeholder="Findings, commands, files, behaviour worth remembering"
-              value={values.technical_notes}
-              onChange={set("technical_notes")}
-              max={20000}
-              errors={err("technical_notes")}
-              description="Reference where secrets live; never paste their values."
-            />
+            {showNotes ? (
+              <>
+                <TextField
+                  id="handoff-completed"
+                  label="Completed"
+                  placeholder="What got done in this session"
+                  value={values.completed_summary}
+                  onChange={set("completed_summary")}
+                  max={10000}
+                  errors={err("completed_summary")}
+                />
+                <TextField
+                  id="handoff-state"
+                  label="Current state"
+                  placeholder="What works now, what's mid-change"
+                  value={values.current_state}
+                  onChange={set("current_state")}
+                  max={10000}
+                  errors={err("current_state")}
+                />
+                <TextField
+                  id="handoff-remaining"
+                  label="Remaining"
+                  placeholder="What isn't finished yet"
+                  value={values.remaining_work}
+                  onChange={set("remaining_work")}
+                  max={10000}
+                  errors={err("remaining_work")}
+                />
+                <TextField
+                  id="handoff-blockers"
+                  label="Blockers"
+                  placeholder="Anything stopping progress"
+                  value={values.blockers}
+                  onChange={set("blockers")}
+                  max={2000}
+                  errors={err("blockers")}
+                />
+                <TextField
+                  id="handoff-notes"
+                  label="Technical notes"
+                  placeholder="Findings, commands, files, behaviour worth remembering"
+                  value={values.technical_notes}
+                  onChange={set("technical_notes")}
+                  max={20000}
+                  errors={err("technical_notes")}
+                  description="Reference where secrets live; never paste their values."
+                />
 
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 text-sm font-medium">Related links</legend>
-              {values.related_links.map((link, i) => (
-                <div key={i} className="flex flex-col gap-1">
-                  <div className="flex gap-2">
-                    <Input
-                      aria-label={`Link ${i + 1} label`}
-                      placeholder="PR #42"
-                      value={link.label}
-                      maxLength={120}
-                      className="w-36 shrink-0"
-                      aria-invalid={Boolean(err(`related_links.${i}.label`))}
-                      onChange={(e) =>
-                        setValues((v) => ({
-                          ...v,
-                          related_links: v.related_links.map((l, j) =>
-                            j === i ? { ...l, label: e.target.value } : l,
-                          ),
-                        }))
-                      }
-                    />
-                    <Input
-                      aria-label={`Link ${i + 1} URL`}
-                      placeholder="https://"
-                      type="url"
-                      value={link.url}
-                      maxLength={2048}
-                      aria-invalid={Boolean(err(`related_links.${i}.url`))}
-                      onChange={(e) =>
-                        setValues((v) => ({
-                          ...v,
-                          related_links: v.related_links.map((l, j) =>
-                            j === i ? { ...l, url: e.target.value } : l,
-                          ),
-                        }))
-                      }
-                    />
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="mb-1 text-sm font-medium">Related links</legend>
+                  {values.related_links.map((link, i) => (
+                    <div key={i} className="flex flex-col gap-1">
+                      <div className="flex gap-2">
+                        <Input
+                          aria-label={`Link ${i + 1} label`}
+                          placeholder="PR #42"
+                          value={link.label}
+                          maxLength={120}
+                          className="w-36 shrink-0"
+                          aria-invalid={Boolean(err(`related_links.${i}.label`))}
+                          onChange={(e) =>
+                            setValues((v) => ({
+                              ...v,
+                              related_links: v.related_links.map((l, j) =>
+                                j === i ? { ...l, label: e.target.value } : l,
+                              ),
+                            }))
+                          }
+                        />
+                        <Input
+                          aria-label={`Link ${i + 1} URL`}
+                          placeholder="https://"
+                          type="url"
+                          value={link.url}
+                          maxLength={2048}
+                          aria-invalid={Boolean(err(`related_links.${i}.url`))}
+                          onChange={(e) =>
+                            setValues((v) => ({
+                              ...v,
+                              related_links: v.related_links.map((l, j) =>
+                                j === i ? { ...l, url: e.target.value } : l,
+                              ),
+                            }))
+                          }
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Remove link ${i + 1}`}
+                          onClick={() =>
+                            setValues((v) => ({
+                              ...v,
+                              related_links: v.related_links.filter((_, j) => j !== i),
+                            }))
+                          }
+                        >
+                          <X />
+                        </Button>
+                      </div>
+                      <FieldError
+                        errors={[
+                          ...(err(`related_links.${i}.label`) ?? []),
+                          ...(err(`related_links.${i}.url`) ?? []),
+                        ]}
+                      />
+                    </div>
+                  ))}
+                  {values.related_links.length < 20 ? (
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Remove link ${i + 1}`}
+                      variant="outline"
+                      size="xs"
+                      className="w-fit"
                       onClick={() =>
                         setValues((v) => ({
                           ...v,
-                          related_links: v.related_links.filter((_, j) => j !== i),
+                          related_links: [...v.related_links, { label: "", url: "" }],
                         }))
                       }
                     >
-                      <X />
+                      <Plus />
+                      Add link
                     </Button>
-                  </div>
-                  <FieldError
-                    errors={[
-                      ...(err(`related_links.${i}.label`) ?? []),
-                      ...(err(`related_links.${i}.url`) ?? []),
-                    ]}
-                  />
-                </div>
-              ))}
-              {values.related_links.length < 20 ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  className="w-fit"
-                  onClick={() =>
-                    setValues((v) => ({
-                      ...v,
-                      related_links: [...v.related_links, { label: "", url: "" }],
-                    }))
-                  }
-                >
-                  <Plus />
-                  Add link
-                </Button>
-              ) : null}
-            </fieldset>
+                  ) : null}
+                </fieldset>
+              </>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-fit"
+                onClick={() => setShowNotes(true)}
+              >
+                <Plus />
+                Add more notes
+              </Button>
+            )}
 
             {allowEndTime && mode !== "save" ? (
               <Field data-invalid={Boolean(err("form"))}>

@@ -3,6 +3,7 @@ import {
   FileText,
   FolderKanban,
   GitBranch,
+  KeyRound,
   Layers,
   ListTodo,
   Server,
@@ -21,6 +22,7 @@ export const SEARCH_KIND_ICONS: Record<SearchKind, LucideIcon> = {
   environment: Server,
   variable: Variable,
   service: Boxes,
+  account: KeyRound,
   repository: GitBranch,
   technology: Layers,
 }

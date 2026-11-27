@@ -26,7 +26,8 @@ export function SecretReferencesList({
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
-          Where secrets live in your vault. Variables link to these instead of holding values.
+          For secrets you keep in another password manager: where to find each one. A variable can
+          point here instead of at an item in your DevWorkspace vault.
         </p>
         <Button
           size="sm"

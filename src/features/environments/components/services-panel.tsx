@@ -2,11 +2,12 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Boxes, ExternalLink, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
+import { Boxes, ExternalLink, KeyRound, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { EnvironmentBadge } from "@/components/shared/domain-badges"
 import { Button } from "@/components/ui/button"
+import { MoreDetails } from "@/components/shared/more-details"
 import {
   Dialog,
   DialogContent,
@@ -82,12 +83,15 @@ export function ServicesList({
   projectId,
   environments,
   showProject,
+  accounts = [],
 }: {
   services: ServiceRow[]
   /** Set on a project's tab: enables add/edit. */
   projectId?: string
   environments?: EnvOption[]
   showProject?: boolean
+  /** Account choices for the service dialog (Plan P11.4). */
+  accounts?: Option[]
 }) {
   const [dialog, setDialog] = React.useState<
     | { kind: "service"; service?: ServiceRow }
@@ -123,121 +127,162 @@ export function ServicesList({
           </p>
         </div>
       ) : (
-        <ul className="flex flex-col divide-y rounded-lg border">
-          {services.map((s) => (
-            <li key={s.id} className="flex flex-col gap-3 p-4">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="flex min-w-0 flex-col gap-0.5">
-                  <p className="font-medium">
-                    {s.name}
-                    <span className="ml-2 text-xs font-normal text-muted-foreground">
-                      {SERVICE_CATEGORY_LABELS[s.category]}
-                      {s.provider ? ` · ${s.provider}` : ""}
-                    </span>
-                  </p>
-                  {showProject && s.project ? (
-                    <Link
-                      href={`/projects/${s.project_id}/services`}
-                      className="w-fit text-xs text-muted-foreground underline-offset-4 hover:underline"
-                    >
-                      {s.project.name}
+        <div className="flex flex-col gap-5">
+          {groupByAccount(services, Boolean(projectId)).map((group) => (
+            <section
+              key={group.key}
+              aria-label={group.title ?? "Services"}
+              className="flex flex-col gap-2"
+            >
+              {group.title ? (
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold">
+                  <KeyRound className="size-3.5 text-muted-foreground" aria-hidden />
+                  {group.href ? (
+                    <Link href={group.href} className="underline-offset-4 hover:underline">
+                      {group.title}
                     </Link>
-                  ) : null}
-                  {s.purpose ? <p className="text-sm text-muted-foreground">{s.purpose}</p> : null}
-                  <div className="flex flex-wrap gap-3">
-                    {s.dashboard_url ? (
-                      <ExternalLinkSmall href={s.dashboard_url}>Dashboard</ExternalLinkSmall>
-                    ) : null}
-                    {s.documentation_url ? (
-                      <ExternalLinkSmall href={s.documentation_url}>Docs</ExternalLinkSmall>
-                    ) : null}
-                  </div>
-                </div>
-                {projectId ? (
-                  <div className="flex gap-1">
-                    <Button
-                      size="xs"
-                      variant="outline"
-                      onClick={() => open({ kind: "instance", service: s })}
-                      disabled={!environments?.length}
-                    >
-                      <Plus />
-                      Add to environment
-                    </Button>
-                    <Button
-                      size="icon-xs"
-                      variant="ghost"
-                      aria-label={`Edit ${s.name}`}
-                      onClick={() => open({ kind: "service", service: s })}
-                    >
-                      <Pencil />
-                    </Button>
-                    <Button
-                      size="icon-xs"
-                      variant="ghost"
-                      aria-label={`Remove ${s.name}`}
-                      disabled={pending}
-                      onClick={() =>
-                        startTransition(async () => {
-                          if (!window.confirm(`Remove ${s.name} and its environment links?`)) return
-                          const r = await deleteService({ projectId, serviceId: s.id })
-                          if (r.ok) toast.success(`Removed ${s.name}`)
-                          else toast.error(r.error)
-                        })
-                      }
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-
-              {s.instances.length ? (
-                <ul className="flex flex-col gap-1.5">
-                  {s.instances.map((i) => (
-                    <li
-                      key={i.id}
-                      className="flex flex-wrap items-center gap-2 rounded-md bg-muted/40 px-2.5 py-1.5 text-sm"
-                    >
-                      <EnvironmentBadge type={i.environment!.environment_type} variant="short" />
-                      <Link
-                        href={`/environments/${i.environment_id}`}
-                        className="font-medium underline-offset-4 hover:underline"
-                      >
-                        {i.environment!.name}
-                      </Link>
-                      <InstanceStatusBadge status={i.status} />
-                      {i.resource_name ? (
-                        <span className="text-muted-foreground">{i.resource_name}</span>
-                      ) : null}
-                      {i.region ? (
-                        <span className="text-xs text-muted-foreground">{i.region}</span>
-                      ) : null}
-                      {i.endpoint_hostname ? (
-                        <span className="truncate font-mono text-xs text-muted-foreground">
-                          {i.endpoint_hostname}
-                        </span>
-                      ) : null}
+                  ) : (
+                    group.title
+                  )}
+                </h3>
+              ) : null}
+              <ul className="flex flex-col divide-y rounded-lg border">
+                {group.services.map((s) => (
+                  <li key={s.id} className="flex flex-col gap-3 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <p className="font-medium">
+                          {s.name}
+                          <span className="ml-2 text-xs font-normal text-muted-foreground">
+                            {SERVICE_CATEGORY_LABELS[s.category]}
+                            {s.provider ? ` · ${s.provider}` : ""}
+                          </span>
+                        </p>
+                        {s.account ? (
+                          <Link
+                            href={`/accounts/${s.account.id}`}
+                            className="inline-flex w-fit items-center gap-1 text-xs text-muted-foreground underline-offset-4 hover:underline"
+                          >
+                            <KeyRound className="size-3" aria-hidden />
+                            {s.account.label
+                              ? `${s.account.platform} (${s.account.label})`
+                              : s.account.platform}
+                          </Link>
+                        ) : null}
+                        {showProject && s.project ? (
+                          <Link
+                            href={`/projects/${s.project_id}/services`}
+                            className="w-fit text-xs text-muted-foreground underline-offset-4 hover:underline"
+                          >
+                            {s.project.name}
+                          </Link>
+                        ) : null}
+                        {s.purpose ? (
+                          <p className="text-sm text-muted-foreground">{s.purpose}</p>
+                        ) : null}
+                        <div className="flex flex-wrap gap-3">
+                          {s.dashboard_url ? (
+                            <ExternalLinkSmall href={s.dashboard_url}>Dashboard</ExternalLinkSmall>
+                          ) : null}
+                          {s.documentation_url ? (
+                            <ExternalLinkSmall href={s.documentation_url}>Docs</ExternalLinkSmall>
+                          ) : null}
+                        </div>
+                      </div>
                       {projectId ? (
-                        <Button
-                          size="icon-xs"
-                          variant="ghost"
-                          className="ml-auto"
-                          aria-label={`Edit ${s.name} in ${i.environment!.name}`}
-                          onClick={() => open({ kind: "instance", service: s, instance: i })}
-                        >
-                          <Pencil />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            size="xs"
+                            variant="outline"
+                            onClick={() => open({ kind: "instance", service: s })}
+                            disabled={!environments?.length}
+                          >
+                            <Plus />
+                            Add to environment
+                          </Button>
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            aria-label={`Edit ${s.name}`}
+                            onClick={() => open({ kind: "service", service: s })}
+                          >
+                            <Pencil />
+                          </Button>
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            aria-label={`Remove ${s.name}`}
+                            disabled={pending}
+                            onClick={() =>
+                              startTransition(async () => {
+                                if (!window.confirm(`Remove ${s.name} and its environment links?`))
+                                  return
+                                const r = await deleteService({ projectId, serviceId: s.id })
+                                if (r.ok) toast.success(`Removed ${s.name}`)
+                                else toast.error(r.error)
+                              })
+                            }
+                          >
+                            <Trash2 />
+                          </Button>
+                        </div>
                       ) : null}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-xs text-muted-foreground">Not linked to any environment yet.</p>
-              )}
-            </li>
+                    </div>
+
+                    {s.instances.length ? (
+                      <ul className="flex flex-col gap-1.5">
+                        {s.instances.map((i) => (
+                          <li
+                            key={i.id}
+                            className="flex flex-wrap items-center gap-2 rounded-md bg-muted/40 px-2.5 py-1.5 text-sm"
+                          >
+                            <EnvironmentBadge
+                              type={i.environment!.environment_type}
+                              variant="short"
+                            />
+                            <Link
+                              href={`/environments/${i.environment_id}`}
+                              className="font-medium underline-offset-4 hover:underline"
+                            >
+                              {i.environment!.name}
+                            </Link>
+                            <InstanceStatusBadge status={i.status} />
+                            {i.resource_name ? (
+                              <span className="text-muted-foreground">{i.resource_name}</span>
+                            ) : null}
+                            {i.region ? (
+                              <span className="text-xs text-muted-foreground">{i.region}</span>
+                            ) : null}
+                            {i.endpoint_hostname ? (
+                              <span className="truncate font-mono text-xs text-muted-foreground">
+                                {i.endpoint_hostname}
+                              </span>
+                            ) : null}
+                            {projectId ? (
+                              <Button
+                                size="icon-xs"
+                                variant="ghost"
+                                className="ml-auto"
+                                aria-label={`Edit ${s.name} in ${i.environment!.name}`}
+                                onClick={() => open({ kind: "instance", service: s, instance: i })}
+                              >
+                                <Pencil />
+                              </Button>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Not linked to any environment yet.
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
       )}
 
       {projectId && dialog?.kind === "service" ? (
@@ -245,6 +290,8 @@ export function ServicesList({
           key={key}
           projectId={projectId}
           service={dialog.service}
+          accounts={accounts}
+          environments={environments ?? []}
           onClose={() => setDialog(null)}
         />
       ) : null}
@@ -444,13 +491,53 @@ export function EnvironmentInstances({
 
 /* Dialogs ---------------------------------------------------------------------- */
 
+/**
+ * On a project's tab, services are grouped by the account they run under (Plan P12.2), so "which
+ * login does this project use for what" reads at a glance. Elsewhere it is one list.
+ */
+function groupByAccount(services: ServiceRow[], byAccount: boolean) {
+  if (!byAccount) return [{ key: "all", title: null, href: null, services }]
+  const groups = new Map<
+    string,
+    { key: string; title: string | null; href: string | null; services: ServiceRow[] }
+  >()
+  for (const s of services) {
+    const key = s.account?.id ?? "none"
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        title: s.account
+          ? s.account.label
+            ? `${s.account.platform} (${s.account.label})`
+            : s.account.platform
+          : "No account",
+        href: s.account ? `/accounts/${s.account.id}` : null,
+        services: [],
+      })
+    }
+    groups.get(key)!.services.push(s)
+  }
+  const list = [...groups.values()]
+  // Accounts by name, "No account" last; a single "No account" group needs no heading.
+  list.sort((a, b) =>
+    a.key === "none" ? 1 : b.key === "none" ? -1 : a.title!.localeCompare(b.title!),
+  )
+  if (list.length === 1 && list[0]!.key === "none") list[0]!.title = null
+  return list
+}
+
 function ServiceDialog({
   projectId,
   service,
+  accounts,
+  environments,
   onClose,
 }: {
   projectId: string
   service?: ServiceRow
+  accounts: Option[]
+  /** New services can be linked to environments in the same step (Plan P12.1). */
+  environments: EnvOption[]
   onClose: () => void
 }) {
   const [state, dispatch, pending] = React.useActionState(
@@ -467,6 +554,14 @@ function ServiceDialog({
     initialFormState,
   )
   const err = (k: string) => toFieldErrors(state.fieldErrors?.[k])
+  // Fold the extras unless one is filled in or has an error (Plan P10.4).
+  const hasMore =
+    Boolean(
+      service?.purpose || service?.dashboard_url || service?.documentation_url || service?.notes,
+    ) ||
+    ["purpose", "dashboard_url", "documentation_url", "notes"].some((k) =>
+      Boolean(state.fieldErrors?.[k]),
+    )
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -519,6 +614,30 @@ function ServiceDialog({
                 </Select>
               </Field>
             </div>
+            <Field data-invalid={Boolean(state.fieldErrors?.account_id)}>
+              <FieldLabel htmlFor="svc-account">Account</FieldLabel>
+              <Select name="account_id" defaultValue={service?.account_id ?? "none"}>
+                <SelectTrigger id="svc-account" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No account</SelectItem>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldDescription>
+                Which login it runs under. Add accounts and their passwords on the{" "}
+                <Link href="/accounts" className="underline underline-offset-4">
+                  Accounts
+                </Link>{" "}
+                page.
+              </FieldDescription>
+              <FieldError errors={err("account_id")} />
+            </Field>
             <Field data-invalid={Boolean(state.fieldErrors?.provider)}>
               <FieldLabel htmlFor="svc-provider">Provider</FieldLabel>
               <Input
@@ -530,52 +649,76 @@ function ServiceDialog({
               />
               <FieldError errors={err("provider")} />
             </Field>
-            <Field data-invalid={Boolean(state.fieldErrors?.purpose)}>
-              <FieldLabel htmlFor="svc-purpose">Purpose</FieldLabel>
-              <Input
-                id="svc-purpose"
-                name="purpose"
-                defaultValue={service?.purpose ?? ""}
-                maxLength={500}
-                placeholder="Primary application database"
-              />
-              <FieldError errors={err("purpose")} />
-            </Field>
-            <div className="grid gap-6 sm:grid-cols-2">
-              <Field data-invalid={Boolean(state.fieldErrors?.dashboard_url)}>
-                <FieldLabel htmlFor="svc-dashboard">Dashboard URL</FieldLabel>
+            {!service && environments.length > 0 ? (
+              <fieldset className="flex flex-col gap-2">
+                <legend className="mb-1 text-sm font-medium">Runs in</legend>
+                <div className="flex flex-wrap gap-x-5 gap-y-2">
+                  {environments.map((e) => (
+                    <label key={e.id} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        name="environment_ids"
+                        value={e.id}
+                        className="size-4 accent-primary"
+                      />
+                      {e.name}
+                    </label>
+                  ))}
+                </div>
+                <FieldDescription>
+                  Tick every environment that uses it. Details for each, like the resource name, can
+                  be added after.
+                </FieldDescription>
+              </fieldset>
+            ) : null}
+            <MoreDetails open={hasMore} hint="purpose, links, notes">
+              <Field data-invalid={Boolean(state.fieldErrors?.purpose)}>
+                <FieldLabel htmlFor="svc-purpose">Purpose</FieldLabel>
                 <Input
-                  id="svc-dashboard"
-                  name="dashboard_url"
-                  type="url"
-                  defaultValue={service?.dashboard_url ?? ""}
-                  maxLength={2048}
+                  id="svc-purpose"
+                  name="purpose"
+                  defaultValue={service?.purpose ?? ""}
+                  maxLength={500}
+                  placeholder="Primary application database"
                 />
-                <FieldError errors={err("dashboard_url")} />
+                <FieldError errors={err("purpose")} />
               </Field>
-              <Field data-invalid={Boolean(state.fieldErrors?.documentation_url)}>
-                <FieldLabel htmlFor="svc-docs">Documentation URL</FieldLabel>
-                <Input
-                  id="svc-docs"
-                  name="documentation_url"
-                  type="url"
-                  defaultValue={service?.documentation_url ?? ""}
-                  maxLength={2048}
+              <div className="grid gap-6 sm:grid-cols-2">
+                <Field data-invalid={Boolean(state.fieldErrors?.dashboard_url)}>
+                  <FieldLabel htmlFor="svc-dashboard">Dashboard URL</FieldLabel>
+                  <Input
+                    id="svc-dashboard"
+                    name="dashboard_url"
+                    type="url"
+                    defaultValue={service?.dashboard_url ?? ""}
+                    maxLength={2048}
+                  />
+                  <FieldError errors={err("dashboard_url")} />
+                </Field>
+                <Field data-invalid={Boolean(state.fieldErrors?.documentation_url)}>
+                  <FieldLabel htmlFor="svc-docs">Documentation URL</FieldLabel>
+                  <Input
+                    id="svc-docs"
+                    name="documentation_url"
+                    type="url"
+                    defaultValue={service?.documentation_url ?? ""}
+                    maxLength={2048}
+                  />
+                  <FieldError errors={err("documentation_url")} />
+                </Field>
+              </div>
+              <Field data-invalid={Boolean(state.fieldErrors?.notes)}>
+                <FieldLabel htmlFor="svc-notes">Notes</FieldLabel>
+                <Textarea
+                  id="svc-notes"
+                  name="notes"
+                  defaultValue={service?.notes ?? ""}
+                  maxLength={10000}
+                  rows={3}
                 />
-                <FieldError errors={err("documentation_url")} />
+                <FieldError errors={err("notes")} />
               </Field>
-            </div>
-            <Field data-invalid={Boolean(state.fieldErrors?.notes)}>
-              <FieldLabel htmlFor="svc-notes">Notes</FieldLabel>
-              <Textarea
-                id="svc-notes"
-                name="notes"
-                defaultValue={service?.notes ?? ""}
-                maxLength={10000}
-                rows={3}
-              />
-              <FieldError errors={err("notes")} />
-            </Field>
+            </MoreDetails>
           </FieldGroup>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onClose}>
@@ -623,6 +766,20 @@ function InstanceDialog({
     initialFormState,
   )
   const err = (k: string) => toFieldErrors(state.fieldErrors?.[k])
+  // Fold the extras unless one is filled in or has an error (Plan P10.4).
+  const hasMore =
+    Boolean(
+      instance &&
+      (instance.region ||
+        instance.endpoint_hostname ||
+        instance.version_or_plan ||
+        instance.status !== "active" ||
+        instance.related_variables.length ||
+        instance.notes),
+    ) ||
+    ["region", "endpoint_hostname", "version_or_plan", "related_variables", "notes"].some((k) =>
+      Boolean(state.fieldErrors?.[k]),
+    )
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -688,92 +845,94 @@ function InstanceDialog({
                 <FieldError errors={err("environment_id")} />
               </Field>
             )}
-            <div className="grid gap-6 sm:grid-cols-2">
-              <Field data-invalid={Boolean(state.fieldErrors?.resource_name)}>
-                <FieldLabel htmlFor="inst-resource">Resource name</FieldLabel>
-                <Input
-                  id="inst-resource"
-                  name="resource_name"
-                  defaultValue={instance?.resource_name ?? ""}
-                  maxLength={200}
-                  placeholder="portal-prod-db"
-                />
-                <FieldError errors={err("resource_name")} />
+            <Field data-invalid={Boolean(state.fieldErrors?.resource_name)}>
+              <FieldLabel htmlFor="inst-resource">Resource name</FieldLabel>
+              <Input
+                id="inst-resource"
+                name="resource_name"
+                defaultValue={instance?.resource_name ?? ""}
+                maxLength={200}
+                placeholder="portal-prod-db"
+              />
+              <FieldError errors={err("resource_name")} />
+            </Field>
+            <MoreDetails open={hasMore} hint="region, endpoint, status, variables">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <Field data-invalid={Boolean(state.fieldErrors?.region)}>
+                  <FieldLabel htmlFor="inst-region">Region</FieldLabel>
+                  <Input
+                    id="inst-region"
+                    name="region"
+                    defaultValue={instance?.region ?? ""}
+                    maxLength={100}
+                    placeholder="ap-southeast-1"
+                  />
+                  <FieldError errors={err("region")} />
+                </Field>
+                <Field data-invalid={Boolean(state.fieldErrors?.endpoint_hostname)}>
+                  <FieldLabel htmlFor="inst-endpoint">Endpoint / hostname</FieldLabel>
+                  <Input
+                    id="inst-endpoint"
+                    name="endpoint_hostname"
+                    defaultValue={instance?.endpoint_hostname ?? ""}
+                    maxLength={255}
+                    placeholder="db.abcd.supabase.co"
+                    className="font-mono text-sm"
+                  />
+                  <FieldError errors={err("endpoint_hostname")} />
+                </Field>
+                <Field data-invalid={Boolean(state.fieldErrors?.version_or_plan)}>
+                  <FieldLabel htmlFor="inst-version">Version / plan</FieldLabel>
+                  <Input
+                    id="inst-version"
+                    name="version_or_plan"
+                    defaultValue={instance?.version_or_plan ?? ""}
+                    maxLength={100}
+                    placeholder="Postgres 17 · Pro"
+                  />
+                  <FieldError errors={err("version_or_plan")} />
+                </Field>
+              </div>
+              <Field>
+                <FieldLabel htmlFor="inst-status">Status</FieldLabel>
+                <Select name="status" defaultValue={instance?.status ?? "active"}>
+                  <SelectTrigger id="inst-status" className="w-full sm:w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SERVICE_INSTANCE_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {SERVICE_INSTANCE_STATUS_META[s].label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldDescription>What you last saw, not a live health check.</FieldDescription>
               </Field>
-              <Field data-invalid={Boolean(state.fieldErrors?.region)}>
-                <FieldLabel htmlFor="inst-region">Region</FieldLabel>
+              <Field data-invalid={Boolean(state.fieldErrors?.related_variables)}>
+                <FieldLabel htmlFor="inst-vars">Variables it uses</FieldLabel>
                 <Input
-                  id="inst-region"
-                  name="region"
-                  defaultValue={instance?.region ?? ""}
-                  maxLength={100}
-                  placeholder="ap-southeast-1"
-                />
-                <FieldError errors={err("region")} />
-              </Field>
-              <Field data-invalid={Boolean(state.fieldErrors?.endpoint_hostname)}>
-                <FieldLabel htmlFor="inst-endpoint">Endpoint / hostname</FieldLabel>
-                <Input
-                  id="inst-endpoint"
-                  name="endpoint_hostname"
-                  defaultValue={instance?.endpoint_hostname ?? ""}
-                  maxLength={255}
-                  placeholder="db.abcd.supabase.co"
+                  id="inst-vars"
+                  name="related_variables"
+                  defaultValue={instance?.related_variables.join(", ") ?? ""}
+                  placeholder="DATABASE_URL, DIRECT_URL"
                   className="font-mono text-sm"
                 />
-                <FieldError errors={err("endpoint_hostname")} />
+                <FieldDescription>Variable names only.</FieldDescription>
+                <FieldError errors={err("related_variables")} />
               </Field>
-              <Field data-invalid={Boolean(state.fieldErrors?.version_or_plan)}>
-                <FieldLabel htmlFor="inst-version">Version / plan</FieldLabel>
-                <Input
-                  id="inst-version"
-                  name="version_or_plan"
-                  defaultValue={instance?.version_or_plan ?? ""}
-                  maxLength={100}
-                  placeholder="Postgres 17 · Pro"
+              <Field data-invalid={Boolean(state.fieldErrors?.notes)}>
+                <FieldLabel htmlFor="inst-notes">Notes</FieldLabel>
+                <Textarea
+                  id="inst-notes"
+                  name="notes"
+                  defaultValue={instance?.notes ?? ""}
+                  maxLength={10000}
+                  rows={2}
                 />
-                <FieldError errors={err("version_or_plan")} />
+                <FieldError errors={err("notes")} />
               </Field>
-            </div>
-            <Field>
-              <FieldLabel htmlFor="inst-status">Status</FieldLabel>
-              <Select name="status" defaultValue={instance?.status ?? "active"}>
-                <SelectTrigger id="inst-status" className="w-full sm:w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SERVICE_INSTANCE_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {SERVICE_INSTANCE_STATUS_META[s].label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldDescription>What you last saw, not a live health check.</FieldDescription>
-            </Field>
-            <Field data-invalid={Boolean(state.fieldErrors?.related_variables)}>
-              <FieldLabel htmlFor="inst-vars">Related variables</FieldLabel>
-              <Input
-                id="inst-vars"
-                name="related_variables"
-                defaultValue={instance?.related_variables.join(", ") ?? ""}
-                placeholder="DATABASE_URL, DIRECT_URL"
-                className="font-mono text-sm"
-              />
-              <FieldDescription>Variable names only.</FieldDescription>
-              <FieldError errors={err("related_variables")} />
-            </Field>
-            <Field data-invalid={Boolean(state.fieldErrors?.notes)}>
-              <FieldLabel htmlFor="inst-notes">Notes</FieldLabel>
-              <Textarea
-                id="inst-notes"
-                name="notes"
-                defaultValue={instance?.notes ?? ""}
-                maxLength={10000}
-                rows={2}
-              />
-              <FieldError errors={err("notes")} />
-            </Field>
+            </MoreDetails>
           </FieldGroup>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onClose}>

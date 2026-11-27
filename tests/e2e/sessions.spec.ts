@@ -60,6 +60,8 @@ test("work session: start, reload, pause with handoff, resume, switch, finish", 
   await handoff
     .getByLabel("Next action", { exact: true })
     .fill("Wire the header timer into the layout")
+  // Pause is short by default; the full notes are one click away.
+  await handoff.getByRole("button", { name: "Add more notes" }).click()
   await handoff.getByLabel("Completed", { exact: true }).fill("Session migrations and RPCs")
   await handoff.getByRole("button", { name: "Add link" }).click()
   await handoff.getByLabel("Link 1 label").fill("PR")

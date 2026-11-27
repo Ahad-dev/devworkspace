@@ -39,12 +39,8 @@ test("settings: default view, export, account deletion", async ({ page }) => {
   test.setTimeout(240_000)
   await signIn(page, user)
 
-  // Default task view: Board opens by default, and List can still be chosen.
-  await page.goto("/settings")
-  await page.getByRole("combobox", { name: "Layout" }).click()
-  await page.getByRole("option", { name: "Board" }).click()
-  await page.getByRole("button", { name: "Save default view" }).click()
-  await expect(page.getByText("Default task view saved.")).toBeVisible({ timeout: 30_000 })
+  // Default task view: the board is the default; saving List makes lists open instead, and the
+  // Board switch is still one click away.
   await page.goto("/my-work")
   await expect(page.getByRole("button", { name: "Board" })).toHaveAttribute(
     "aria-pressed",
@@ -53,8 +49,17 @@ test("settings: default view, export, account deletion", async ({ page }) => {
       timeout: 30_000,
     },
   )
-  await page.getByRole("button", { name: "List" }).click()
-  await expect(page).toHaveURL(/layout=list/)
+  await page.goto("/settings")
+  await page.getByRole("combobox", { name: "Layout" }).click()
+  await page.getByRole("option", { name: "List" }).click()
+  await page.getByRole("button", { name: "Save default view" }).click()
+  await expect(page.getByText("Default task view saved.")).toBeVisible({ timeout: 30_000 })
+  await page.goto("/my-work")
+  await expect(page.getByRole("button", { name: "List" })).toHaveAttribute("aria-pressed", "true", {
+    timeout: 30_000,
+  })
+  await page.getByRole("button", { name: "Board" }).click()
+  await expect(page).toHaveURL(/layout=board/)
 
   // Security: other sessions can be signed out; this one stays signed in.
   await page.goto("/settings")
@@ -71,8 +76,8 @@ test("settings: default view, export, account deletion", async ({ page }) => {
   const jsonFile = await json
   expect(jsonFile.suggestedFilename()).toMatch(/^devworkspace-data-\d{4}-\d{2}-\d{2}\.json$/)
   const data = JSON.parse(readFileSync((await jsonFile.path())!, "utf8"))
-  expect(data.schema_version).toBe(1)
-  expect(data.notice).toMatch(/does not contain secret values/)
+  expect(data.schema_version).toBe(2)
+  expect(data.notice).toMatch(/does not contain secret values in readable form/)
   expect(data.data.projects.map((p: { name: string }) => p.name)).toEqual(["Exported project"])
   expect(data.data.tasks).toHaveLength(1)
   expect(data.data.documents[0]).not.toHaveProperty("search_vector")

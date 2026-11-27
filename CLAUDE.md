@@ -31,8 +31,13 @@ Supabase (hosted dev project; Auth, Postgres + RLS, Storage), Vitest, Playwright
 
 ## Security boundaries (never violate)
 
-- DevWorkspace stores secret **references and metadata only**. No column, form, log, URL or activity metadata may hold
-  secret values (API keys, passwords, credential-bearing URLs, private keys, tokens, `.env` contents).
+- Secret values (API keys, passwords, credential-bearing URLs, private keys, tokens, `.env` contents) never appear in
+  plain form in any column, form submission, log, URL, activity record, search index, offline copy or export.
+- The one place they are kept is the **Accounts vault** (Phase 11, owner's decision 2026-11-27): `account_secrets.ciphertext`,
+  encrypted in the owner's browser (WebCrypto). Plaintext, the master password, the recovery key and the vault key
+  never reach the server. Everything else stores references and metadata only.
+- Claude never asks for, types or reads the owner's vault master password or recovery key. Tests create throwaway vaults
+  for throwaway users only.
 - RLS on every table. Ownership comes from `auth.uid()`, never from client-supplied `owner_id`.
 - The Supabase secret key (`SUPABASE_SECRET_KEY`) is only used in `server-only` modules and test helpers. It is never in
   `NEXT_PUBLIC_*` vars or browser code. `.env.local` / `.env.test.local` are gitignored.

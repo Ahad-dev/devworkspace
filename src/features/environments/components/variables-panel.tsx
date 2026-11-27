@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import {
   AlertTriangle,
   KeyRound,
@@ -14,6 +15,7 @@ import {
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { MoreDetails } from "@/components/shared/more-details"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
@@ -29,7 +31,10 @@ import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
@@ -44,6 +49,8 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { FormMessage, toFieldErrors } from "@/features/auth/components/form-message"
 import { initialFormState, type FormState } from "@/features/projects/schemas"
+import { VaultItemValue } from "@/features/vault/components/vault-item-value"
+import type { VaultItemOption } from "@/features/vault/queries"
 import {
   CONFIGURATION_STATUSES,
   CONFIGURATION_STATUS_META,
@@ -64,20 +71,34 @@ import { ConfigurationStatusBadge, VerificationBadge } from "./env-badges"
 import { describeReference, SecretReferenceDialog } from "./secret-reference-dialog"
 
 const NONE = "none"
+const VAULT = "vault:"
+const OTHER = "ref:"
+
+/** The picker's value for a variable: in my vault, in another vault, or not tracked. */
+function storedIn(v?: EnvironmentVariableRow) {
+  if (v?.account_secret_id) return VAULT + v.account_secret_id
+  if (v?.secret_reference_id) return OTHER + v.secret_reference_id
+  return NONE
+}
 
 /**
- * Configuration-variable registry for one environment (Spec FR-08; Plan P5.5, P5.6). Names and
- * flags only; statuses show how they were established. There is no value input anywhere.
+ * Configuration-variable registry for one environment (Spec FR-08; Plan P5.5, P5.6, P12.3). Names
+ * and flags, plus where each value is kept: in the vault (Show and Copy decrypt it in the
+ * browser), in another vault, or not tracked. The form itself never has a value input.
  */
 export function VariablesPanel({
   environmentId,
   variables,
   references,
+  vaultItems,
+  hasVault,
   readOnly,
 }: {
   environmentId: string
   variables: EnvironmentVariableRow[]
   references: SecretReferenceRow[]
+  vaultItems: VaultItemOption[]
+  hasVault: boolean
   readOnly?: boolean
 }) {
   const [editing, setEditing] = React.useState<EnvironmentVariableRow | "new" | null>(null)
@@ -85,6 +106,7 @@ export function VariablesPanel({
   const [bulkOpen, setBulkOpen] = React.useState(false)
   const [pending, startTransition] = React.useTransition()
   const refById = new Map(references.map((r) => [r.id, r]))
+  const itemById = new Map(vaultItems.map((i) => [i.id, i]))
 
   const open = (v: EnvironmentVariableRow | "new") => {
     setDialogKey((k) => k + 1)
@@ -126,7 +148,7 @@ export function VariablesPanel({
       {variables.length === 0 ? (
         <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
           No variables yet. Register the names this environment needs (e.g. DATABASE_URL) and mark
-          whether each is configured. Values stay in your vault.
+          whether each is configured. Secret values stay in a vault: link each one to it here.
         </p>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
@@ -136,13 +158,13 @@ export function VariablesPanel({
                 <TableHead className="min-w-48">Name</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="hidden md:table-cell">How</TableHead>
-                <TableHead className="hidden lg:table-cell">Secret reference</TableHead>
                 <TableHead className="w-0" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {variables.map((v) => {
                 const ref = v.secret_reference_id ? refById.get(v.secret_reference_id) : undefined
+                const item = v.account_secret_id ? itemById.get(v.account_secret_id) : undefined
                 const needs =
                   v.is_required &&
                   (v.configuration_status === "missing" || v.configuration_status === "unknown")
@@ -159,10 +181,24 @@ export function VariablesPanel({
                               Sensitive
                             </span>
                           ) : null}
-                          {v.is_sensitive && !ref ? (
-                            <span className="text-status-in-progress">no vault reference</span>
+                          {v.is_sensitive && !ref && !item ? (
+                            <span className="text-status-in-progress">value location not set</span>
                           ) : null}
                         </span>
+                        {/* Where the value is (Plan P12.3), under the name so the table stays narrow. */}
+                        {item ? (
+                          <div className="pt-1">
+                            <VaultItemValue item={item} name={v.name} />
+                          </div>
+                        ) : ref ? (
+                          <span
+                            className="inline-flex max-w-md items-center gap-1 text-xs text-muted-foreground"
+                            title={describeReference(ref)}
+                          >
+                            <KeyRound className="size-3.5 shrink-0" aria-hidden />
+                            <span className="truncate">{describeReference(ref)}</span>
+                          </span>
+                        ) : null}
                         {v.notes ? (
                           <span
                             className="max-w-md truncate text-xs text-muted-foreground"
@@ -223,19 +259,6 @@ export function VariablesPanel({
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {ref ? (
-                        <span
-                          className="inline-flex max-w-64 items-center gap-1 text-xs"
-                          title={describeReference(ref)}
-                        >
-                          <KeyRound className="size-3.5 shrink-0" aria-hidden />
-                          <span className="truncate">{describeReference(ref)}</span>
-                        </span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
                     <TableCell>
                       {!readOnly ? (
                         <div className="flex justify-end gap-1">
@@ -279,6 +302,8 @@ export function VariablesPanel({
           environmentId={environmentId}
           variable={editing === "new" ? undefined : editing}
           references={references}
+          vaultItems={vaultItems}
+          hasVault={hasVault}
           onClose={() => setEditing(null)}
         />
       ) : null}
@@ -293,17 +318,21 @@ function VariableDialog({
   environmentId,
   variable,
   references,
+  vaultItems,
+  hasVault,
   onClose,
 }: {
   environmentId: string
   variable?: EnvironmentVariableRow
   references: SecretReferenceRow[]
+  vaultItems: VaultItemOption[]
+  hasVault: boolean
   onClose: () => void
 }) {
   const [name, setName] = React.useState(variable?.name ?? "")
   const [droppedValue, setDroppedValue] = React.useState(false)
   const [sensitive, setSensitive] = React.useState(variable?.is_sensitive ?? false)
-  const [refId, setRefId] = React.useState(variable?.secret_reference_id ?? NONE)
+  const [stored, setStored] = React.useState(() => storedIn(variable))
   const [refDialog, setRefDialog] = React.useState(false)
   const [extraRefs, setExtraRefs] = React.useState<SecretReferenceRow[]>([])
   const [state, dispatch, pending] = React.useActionState(
@@ -320,6 +349,10 @@ function VariableDialog({
     initialFormState,
   )
   const err = (k: string) => toFieldErrors(state.fieldErrors?.[k])
+  // Fold the extras unless one is filled in or has an error (Plan P10.4).
+  const hasMore =
+    Boolean(variable?.notes || variable?.verification_method === "imported") ||
+    Boolean(state.fieldErrors?.notes)
   const allRefs = [
     ...references,
     ...extraRefs.filter((x) => !references.some((r) => r.id === x.id)),
@@ -340,7 +373,8 @@ function VariableDialog({
           <DialogHeader>
             <DialogTitle>{variable ? `Edit ${variable.name}` : "Add variable"}</DialogTitle>
             <DialogDescription>
-              The name and whether it&apos;s set. DevWorkspace never stores the value.
+              The name, whether it&apos;s set, and where its value is kept. You never type the value
+              here.
             </DialogDescription>
           </DialogHeader>
           {state.status === "error" && state.message ? (
@@ -404,27 +438,107 @@ function VariableDialog({
               </div>
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="var-status">Status</FieldLabel>
-                <Select
-                  name="configuration_status"
-                  defaultValue={variable?.configuration_status ?? "unknown"}
-                >
-                  <SelectTrigger id="var-status" className="w-full">
+            <Field>
+              <FieldLabel htmlFor="var-status">Status</FieldLabel>
+              <Select
+                name="configuration_status"
+                defaultValue={variable?.configuration_status ?? "unknown"}
+              >
+                <SelectTrigger id="var-status" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CONFIGURATION_STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {CONFIGURATION_STATUS_META[s as ConfigurationStatus].label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <Field
+              data-invalid={Boolean(
+                state.fieldErrors?.secret_reference_id || state.fieldErrors?.account_secret_id,
+              )}
+            >
+              <FieldLabel htmlFor="var-ref">Where the value is stored</FieldLabel>
+              {/* One choice feeds two columns: the vault item, or a reference to another vault. */}
+              <input
+                type="hidden"
+                name="account_secret_id"
+                value={stored.startsWith(VAULT) ? stored.slice(VAULT.length) : ""}
+              />
+              <input
+                type="hidden"
+                name="secret_reference_id"
+                value={stored.startsWith(OTHER) ? stored.slice(OTHER.length) : ""}
+              />
+              <div className="flex gap-2">
+                <Select value={stored} onValueChange={setStored}>
+                  <SelectTrigger id="var-ref" className="min-w-0 flex-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CONFIGURATION_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {CONFIGURATION_STATUS_META[s as ConfigurationStatus].label}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value={NONE}>Not tracked</SelectItem>
+                    {vaultItems.length ? (
+                      <>
+                        <SelectSeparator />
+                        <SelectGroup>
+                          <SelectLabel>In my vault</SelectLabel>
+                          {vaultItems.map((i) => (
+                            <SelectItem key={i.id} value={VAULT + i.id}>
+                              {i.account} · {i.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </>
+                    ) : null}
+                    {allRefs.length ? (
+                      <>
+                        <SelectSeparator />
+                        <SelectGroup>
+                          <SelectLabel>Other vaults</SelectLabel>
+                          {allRefs.map((r) => (
+                            <SelectItem key={r.id} value={OTHER + r.id}>
+                              {describeReference(r)}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </>
+                    ) : null}
                   </SelectContent>
                 </Select>
-              </Field>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setRefDialog(true)}
+                  title="Add a reference to another vault (1Password, Doppler and so on)"
+                >
+                  <KeyRound />
+                  New
+                </Button>
+              </div>
+              {vaultItems.length === 0 ? (
+                <FieldDescription>
+                  To keep the value in DevWorkspace,{" "}
+                  <Link href="/accounts" className="underline underline-offset-4">
+                    {hasVault ? "add it to an account" : "set up your vault under Accounts"}
+                  </Link>
+                  , then pick it here.
+                </FieldDescription>
+              ) : sensitive && stored === NONE ? (
+                <FieldDescription>
+                  Pick the vault item that holds this secret, so you can copy it from here.
+                </FieldDescription>
+              ) : null}
+              <FieldError errors={err("secret_reference_id")} />
+              <FieldError errors={err("account_secret_id")} />
+            </Field>
+
+            <MoreDetails open={hasMore} hint="how it was checked, notes">
               <Field>
-                <FieldLabel htmlFor="var-method">How you know</FieldLabel>
+                <FieldLabel htmlFor="var-method">Checked how</FieldLabel>
                 <Select
                   name="verification_method"
                   defaultValue={
@@ -443,50 +557,20 @@ function VariableDialog({
                   &quot;Integration verified&quot; is only set by a server integration.
                 </FieldDescription>
               </Field>
-            </div>
-
-            <Field data-invalid={Boolean(state.fieldErrors?.secret_reference_id)}>
-              <FieldLabel htmlFor="var-ref">Secret reference</FieldLabel>
-              <div className="flex gap-2">
-                <Select name="secret_reference_id" value={refId} onValueChange={setRefId}>
-                  <SelectTrigger id="var-ref" className="min-w-0 flex-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>None</SelectItem>
-                    {allRefs.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {describeReference(r)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button type="button" variant="outline" onClick={() => setRefDialog(true)}>
-                  <KeyRound />
-                  New
-                </Button>
-              </div>
-              {sensitive && refId === NONE ? (
-                <FieldDescription>
-                  Sensitive variables should point to where the secret lives in your vault.
-                </FieldDescription>
-              ) : null}
-              <FieldError errors={err("secret_reference_id")} />
-            </Field>
-
-            <Field data-invalid={Boolean(state.fieldErrors?.notes)}>
-              <FieldLabel htmlFor="var-notes">Notes</FieldLabel>
-              <Textarea
-                id="var-notes"
-                name="notes"
-                defaultValue={variable?.notes ?? ""}
-                maxLength={2000}
-                rows={2}
-                placeholder="Format, who issues it, rotation…"
-                aria-invalid={Boolean(state.fieldErrors?.notes)}
-              />
-              <FieldError errors={err("notes")} />
-            </Field>
+              <Field data-invalid={Boolean(state.fieldErrors?.notes)}>
+                <FieldLabel htmlFor="var-notes">Notes</FieldLabel>
+                <Textarea
+                  id="var-notes"
+                  name="notes"
+                  defaultValue={variable?.notes ?? ""}
+                  maxLength={2000}
+                  rows={2}
+                  placeholder="Format, who issues it, rotation…"
+                  aria-invalid={Boolean(state.fieldErrors?.notes)}
+                />
+                <FieldError errors={err("notes")} />
+              </Field>
+            </MoreDetails>
           </FieldGroup>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onClose}>
@@ -517,7 +601,7 @@ function VariableDialog({
                 vault_url: null,
               },
             ])
-            setRefId(id)
+            setStored(OTHER + id)
           }}
         />
       ) : null}

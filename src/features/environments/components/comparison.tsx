@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { AlertTriangle, BadgeCheck, KeyRound, ShieldAlert } from "lucide-react"
+import { AlertTriangle, BadgeCheck, KeyRound, LockKeyhole, ShieldAlert } from "lucide-react"
 
 import { EnvironmentBadge } from "@/components/shared/domain-badges"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -174,7 +174,12 @@ export function ComparisonTable({
                           {!c.required ? (
                             <span className="text-xs text-muted-foreground">optional</span>
                           ) : null}
-                          {c.hasReference ? (
+                          {c.inVault ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                              <LockKeyhole className="size-3.5" aria-hidden />
+                              In vault
+                            </span>
+                          ) : c.hasReference ? (
                             <KeyRound
                               className="size-3.5 text-muted-foreground"
                               aria-label="Has a secret reference"

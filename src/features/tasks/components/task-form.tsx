@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { MoreDetails } from "@/components/shared/more-details"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
@@ -93,6 +94,10 @@ export function TaskForm({
   )
   const [status, setStatus] = React.useState<TaskStatus>(defaults.status)
   const err = (k: string) => state.fieldErrors?.[k]
+  // Fold the extras unless one is filled in or has an error (Plan P10.4).
+  const hasMore =
+    Boolean(defaults.repository_id || defaults.parent_task_id || defaults.external_reference_url) ||
+    ["repository_id", "parent_task_id", "external_reference_url"].some((k) => Boolean(err(k)))
 
   return (
     <form
@@ -261,67 +266,69 @@ export function TaskForm({
           <FieldError errors={toFieldErrors(err("description"))} />
         </Field>
 
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Field data-invalid={Boolean(err("repository_id"))}>
-            <FieldLabel htmlFor="repository_id">Repository</FieldLabel>
-            <Select
-              key={`repo-${projectId}`}
-              name="repository_id"
-              defaultValue={defaults.repository_id ?? NONE}
-              disabled={!projectId}
-            >
-              <SelectTrigger id="repository_id" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>None</SelectItem>
-                {repositories.map((r) => (
-                  <SelectItem key={r.id} value={r.id}>
-                    {r.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError errors={toFieldErrors(err("repository_id"))} />
-          </Field>
-          <Field data-invalid={Boolean(err("parent_task_id"))}>
-            <FieldLabel htmlFor="parent_task_id">Parent task</FieldLabel>
-            <Select
-              key={`parent-${projectId}`}
-              name="parent_task_id"
-              defaultValue={defaults.parent_task_id ?? NONE}
-              disabled={!projectId}
-            >
-              <SelectTrigger id="parent_task_id" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>None</SelectItem>
-                {parentOptions.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError errors={toFieldErrors(err("parent_task_id"))} />
-          </Field>
-        </div>
+        <MoreDetails open={hasMore} hint="repository, parent task, external link">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Field data-invalid={Boolean(err("repository_id"))}>
+              <FieldLabel htmlFor="repository_id">Repository</FieldLabel>
+              <Select
+                key={`repo-${projectId}`}
+                name="repository_id"
+                defaultValue={defaults.repository_id ?? NONE}
+                disabled={!projectId}
+              >
+                <SelectTrigger id="repository_id" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>None</SelectItem>
+                  {repositories.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError errors={toFieldErrors(err("repository_id"))} />
+            </Field>
+            <Field data-invalid={Boolean(err("parent_task_id"))}>
+              <FieldLabel htmlFor="parent_task_id">Parent task</FieldLabel>
+              <Select
+                key={`parent-${projectId}`}
+                name="parent_task_id"
+                defaultValue={defaults.parent_task_id ?? NONE}
+                disabled={!projectId}
+              >
+                <SelectTrigger id="parent_task_id" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>None</SelectItem>
+                  {parentOptions.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError errors={toFieldErrors(err("parent_task_id"))} />
+            </Field>
+          </div>
 
-        <Field data-invalid={Boolean(err("external_reference_url"))}>
-          <FieldLabel htmlFor="external_reference_url">External reference</FieldLabel>
-          <Input
-            id="external_reference_url"
-            name="external_reference_url"
-            type="url"
-            defaultValue={defaults.external_reference_url}
-            maxLength={2048}
-            placeholder="https://github.com/acme/api/issues/42"
-            aria-invalid={Boolean(err("external_reference_url"))}
-          />
-          <FieldDescription>A ticket, PR, email thread or client reference.</FieldDescription>
-          <FieldError errors={toFieldErrors(err("external_reference_url"))} />
-        </Field>
+          <Field data-invalid={Boolean(err("external_reference_url"))}>
+            <FieldLabel htmlFor="external_reference_url">External reference</FieldLabel>
+            <Input
+              id="external_reference_url"
+              name="external_reference_url"
+              type="url"
+              defaultValue={defaults.external_reference_url}
+              maxLength={2048}
+              placeholder="https://github.com/acme/api/issues/42"
+              aria-invalid={Boolean(err("external_reference_url"))}
+            />
+            <FieldDescription>A ticket, PR, email thread or client reference.</FieldDescription>
+            <FieldError errors={toFieldErrors(err("external_reference_url"))} />
+          </Field>
+        </MoreDetails>
       </FieldGroup>
 
       <div className="flex items-center gap-2">

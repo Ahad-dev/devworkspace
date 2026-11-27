@@ -68,8 +68,8 @@ export function ProductionBanner() {
       <AlertTriangle className="mt-0.5 size-4 shrink-0 text-env-production" aria-hidden />
       <p>
         <span className="font-semibold text-env-production">Production.</span> Changes here describe
-        the live system. Double-check before you edit, and never paste secret values: link a vault
-        reference instead.
+        the live system. Double-check before you edit, and never paste secret values here: keep them
+        in the vault under Accounts and link them to the variable.
       </p>
     </div>
   )

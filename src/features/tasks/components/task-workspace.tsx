@@ -21,7 +21,12 @@ import {
   listRepositoryOptions,
   listTasks,
 } from "../queries"
-import { parseTaskFilters, type TaskFilters as Filters } from "../utils"
+import {
+  BOARD_DONE_DAYS,
+  boardColumns,
+  parseTaskFilters,
+  type TaskFilters as Filters,
+} from "../utils"
 import { QuickTaskDialog } from "./quick-task-dialog"
 import { TaskBoard } from "./task-board"
 import { TaskFilters } from "./task-filters"
@@ -32,15 +37,18 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>
 /**
  * List/board workspace shared by My Work and a project's Tasks tab (Plan P3.7, P3.11).
  * With `project`, results are fixed to that project and the project filter is hidden.
+ * `canCreate` is false for archived projects: no quick add or create prompts.
  */
 export function TaskWorkspace({
   searchParams,
   basePath,
   project,
+  canCreate = true,
 }: {
   searchParams: SearchParams
   basePath: string
   project?: { id: string; name: string }
+  canCreate?: boolean
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -48,7 +56,12 @@ export function TaskWorkspace({
         <Toolbar projectId={project?.id} />
       </Suspense>
       <Suspense fallback={<Skeleton className="h-72 w-full" />}>
-        <Results searchParams={searchParams} basePath={basePath} project={project} />
+        <Results
+          searchParams={searchParams}
+          basePath={basePath}
+          project={project}
+          canCreate={canCreate}
+        />
       </Suspense>
     </div>
   )
@@ -77,20 +90,24 @@ async function Results({
   searchParams,
   basePath,
   project,
+  canCreate,
 }: {
   searchParams: SearchParams
   basePath: string
   project?: { id: string; name: string }
+  canCreate: boolean
 }) {
   const [sp, profile] = await Promise.all([searchParams, getMyProfile()])
   const filters = parseTaskFilters(sp, profile.taskView)
   const { tasks, total, page, pageSize } = await listTasks(filters, { projectId: project?.id })
 
-  if (tasks.length === 0 && filters.layout === "list") {
-    return <TasksEmpty filters={filters} project={project} />
+  if (tasks.length === 0) {
+    return <TasksEmpty filters={filters} project={project} canCreate={canCreate} />
   }
 
   if (filters.layout === "board") {
+    const columns = boardColumns(filters)
+    const completedHref = `${basePath}?view=completed`
     return (
       <div className="flex flex-col gap-2">
         {total > BOARD_LIMIT ? (
@@ -98,7 +115,25 @@ async function Results({
             Showing {BOARD_LIMIT} of {total} tasks. Narrow the board with filters, or use the list.
           </p>
         ) : null}
-        <TaskBoard tasks={tasks} showProject={!project} timeZone={profile.timezone} />
+        <TaskBoard
+          tasks={tasks}
+          columns={columns}
+          showProject={!project}
+          timeZone={profile.timezone}
+          // Capture straight into the Inbox column, like Quick add (Plan §9 decision 1).
+          quickAdd={
+            canCreate && columns.includes("inbox")
+              ? project
+                ? { fixedProject: project }
+                : { projects: listProjectOptions() }
+              : undefined
+          }
+          doneFooter={
+            filters.view === "all" && columns.includes("done")
+              ? { href: completedHref, days: BOARD_DONE_DAYS }
+              : undefined
+          }
+        />
       </div>
     )
   }
@@ -120,9 +155,11 @@ async function Results({
 function TasksEmpty({
   filters,
   project,
+  canCreate,
 }: {
   filters: Filters
   project?: { id: string; name: string }
+  canCreate: boolean
 }) {
   const filtered = Boolean(
     filters.q ||
@@ -172,7 +209,7 @@ function TasksEmpty({
         },
       }[filters.view]
   const Icon = copy.icon
-  const showCreate = !filtered && filters.view === "all"
+  const showCreate = canCreate && !filtered && filters.view === "all"
 
   return (
     <Empty className="border border-dashed">

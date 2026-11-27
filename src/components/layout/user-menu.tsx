@@ -18,6 +18,7 @@ import { toast } from "sonner"
 import { signOut } from "@/features/auth/actions"
 import { isOffline } from "@/lib/offline/guard"
 import { wipeOfflineData } from "@/lib/offline/store"
+import { lockVault } from "@/features/vault/store"
 
 function initials(displayName: string | null, email: string | null) {
   const words = displayName?.trim().split(/\s+/).filter(Boolean) ?? []
@@ -72,6 +73,7 @@ export function UserMenu({
             // The device's offline copy goes first, so it is gone even if signing out can't
             // reach the server (Plan P9.5). The sign-in page wipes it again after.
             void wipeOfflineData()
+            lockVault()
             if (isOffline()) {
               e.preventDefault()
               toast.error("Your offline copy was deleted. Reconnect to finish signing out.")

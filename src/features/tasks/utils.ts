@@ -87,13 +87,15 @@ export type TaskFilters = {
 
 /** The user's default task view (Spec §6.11; Plan P8.1), kept in profiles.preferences.task_view. */
 export type TaskViewDefaults = { layout: "list" | "board"; sort: TaskSort }
-export const DEFAULT_TASK_VIEW: TaskViewDefaults = { layout: "list", sort: "priority" }
+// The board is the default everywhere (owner's request, Plan P10.1); the list stays a switch.
+export const DEFAULT_TASK_VIEW: TaskViewDefaults = { layout: "board", sort: "priority" }
 
 /** Reads preferences.task_view, ignoring anything unexpected. */
 export function parseTaskViewPreference(preferences: unknown): TaskViewDefaults {
   const raw = (preferences as { task_view?: { layout?: unknown; sort?: unknown } } | null)
     ?.task_view
-  const layout = raw?.layout === "board" ? "board" : "list"
+  const layout =
+    raw?.layout === "list" || raw?.layout === "board" ? raw.layout : DEFAULT_TASK_VIEW.layout
   const sort = (TASK_SORTS as readonly unknown[]).includes(raw?.sort)
     ? (raw!.sort as TaskSort)
     : DEFAULT_TASK_VIEW.sort
@@ -127,11 +129,19 @@ export function parseTaskFilters(
   const repo = one("repo")
   const page = Number.parseInt(one("page"), 10)
 
+  const actualView: TaskView = TASK_VIEWS.includes(view) ? view : "all"
+
   return {
-    view: TASK_VIEWS.includes(view) ? view : "all",
-    // An explicit layout or sort wins; otherwise the user's saved default applies.
-    layout:
-      one("layout") === "board" ? "board" : one("layout") === "list" ? "list" : defaults.layout,
+    view: actualView,
+    // History views are always lists: one Done column with hundreds of cards, or dragging archived
+    // tasks around, is worse than a table. Elsewhere an explicit layout wins over the saved default.
+    layout: LIST_ONLY_VIEWS.includes(actualView)
+      ? "list"
+      : one("layout") === "board"
+        ? "board"
+        : one("layout") === "list"
+          ? "list"
+          : defaults.layout,
     q: one("q").trim().slice(0, 100),
     projectId: UUID.test(project) ? project : null,
     repositoryId: UUID.test(repo) ? repo : null,
@@ -144,5 +154,30 @@ export function parseTaskFilters(
   }
 }
 
+/** Views shown only as a list (see parseTaskFilters). */
+export const LIST_ONLY_VIEWS: readonly TaskView[] = ["completed", "archived"]
+
 /** Board columns: every status in workflow order. */
 export const BOARD_COLUMNS: readonly TaskStatus[] = TASK_STATUSES
+
+/** In the "All" board, the Done column keeps tasks completed in this many days. */
+export const BOARD_DONE_DAYS = 14
+
+/**
+ * The columns that can hold tasks for these filters, in workflow order, so a filtered board isn't
+ * mostly empty columns. Mirrors the status rules in listTasks.
+ */
+export function boardColumns(filters: Pick<TaskFilters, "view" | "statuses" | "flags">) {
+  let allowed = new Set<TaskStatus>(BOARD_COLUMNS)
+  const keep = (statuses: readonly TaskStatus[]) => {
+    allowed = new Set(statuses.filter((s) => allowed.has(s)))
+  }
+  if (filters.view === "inbox") keep(["inbox"])
+  else if (filters.view === "blocked") keep(["blocked"])
+  else if (filters.view === "upcoming") keep(BOARD_COLUMNS.filter((s) => s !== "done"))
+  else if (filters.statuses.length) keep(filters.statuses)
+  if (filters.flags.includes("overdue")) keep(BOARD_COLUMNS.filter((s) => s !== "done"))
+  if (filters.flags.includes("no-next-action")) keep(["in_progress"])
+  const columns = BOARD_COLUMNS.filter((s) => allowed.has(s))
+  return columns.length ? columns : [...BOARD_COLUMNS]
+}

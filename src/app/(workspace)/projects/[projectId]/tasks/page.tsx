@@ -55,6 +55,7 @@ async function ProjectTasks({
         searchParams={searchParams}
         basePath={`/projects/${project.id}/tasks`}
         project={fixed}
+        canCreate={project.status !== "archived"}
       />
     </div>
   )

@@ -15,6 +15,8 @@ import {
   TASK_LIST_SELECT,
 } from "./selects"
 import {
+  BOARD_DONE_DAYS,
+  compareTasks,
   flattenLabels,
   isOverdue,
   missingNextAction,
@@ -80,6 +82,12 @@ export async function listTasks(filters: TaskFilters, scope: { projectId?: strin
       // "All" is the open queue: Done has its own view, except on the board's Done column.
       if (filters.statuses.length) q = q.in("status", filters.statuses)
       else if (!board && filters.view === "all") q = q.neq("status", "done")
+      else if (board && filters.view === "all") {
+        // The board's Done column keeps recent work only, so old Done tasks can't crowd open
+        // ones out of the one-page board (Plan P10.1). The timestamp is quoted for or().
+        const since = new Date(Date.now() - BOARD_DONE_DAYS * 86_400_000).toISOString()
+        q = q.or(`status.neq.done,completed_at.gte."${since}"`)
+      }
   }
 
   if (filters.priorities.length) q = q.in("priority", filters.priorities)
@@ -150,7 +158,8 @@ export async function getTaskViewCounts(scope: { projectId?: string } = {}) {
 
 /* Options for pickers -------------------------------------------------------- */
 
-export async function listProjectOptions() {
+/** Per request: My Work asks for it in the filters, the board's quick add and the header. */
+export const listProjectOptions = cache(async () => {
   await requireUser()
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -160,7 +169,7 @@ export async function listProjectOptions() {
     .order("name")
   if (error) throw new Error("Couldn't load projects")
   return data ?? []
-}
+})
 
 export async function listLabels(): Promise<TaskLabel[]> {
   await requireUser()
@@ -266,4 +275,32 @@ export async function getTaskRelations(task: { id: string; parent_task_id: strin
     links: links.data ?? [],
     activity: activity.data ?? [],
   }
+}
+
+/** A project's next tasks for its Overview (Plan P10.6): in progress first, then ready. */
+export async function listNextUp(projectId: string, limit = 5) {
+  await requireUser()
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("tasks")
+    .select(TASK_LIST_SELECT)
+    .eq("project_id", projectId)
+    .is("archived_at", null)
+    .in("status", ["in_progress", "ready"])
+    .order("priority")
+    .order("due_at", { ascending: true, nullsFirst: false })
+    .limit(50)
+  if (error) throw new Error("Couldn't load tasks")
+  const now = new Date()
+  return (data ?? [])
+    .map((t) => ({
+      ...t,
+      labels: flattenLabels(t.labels),
+      overdue: isOverdue(t, now),
+      missingNextAction: missingNextAction(t),
+    }))
+    .sort((a, b) =>
+      a.status === b.status ? compareTasks(a, b) : a.status === "in_progress" ? -1 : 1,
+    )
+    .slice(0, limit)
 }

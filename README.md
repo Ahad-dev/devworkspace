@@ -1,7 +1,9 @@
 # DevWorkspace
 
 A personal engineering workspace: projects, repositories, a native task manager, work sessions
-with handoffs, environment and service registries, and a technical knowledge base, in one place.
+with handoffs, environment and service registries, a technical knowledge base, and Accounts with
+an end-to-end encrypted password vault (values are encrypted in your browser; the server only
+ever holds ciphertext, see [docs/SECURITY.md](docs/SECURITY.md) §8), in one place.
 
 - **What it does:** [docs/DevWorkspace_Full_Product_and_Implementation_Specification.md](docs/DevWorkspace_Full_Product_and_Implementation_Specification.md)
 - **Build plan and progress:** [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
@@ -119,4 +121,4 @@ Database changes only happen through migration files. Never edit an applied migr
 
 - [docs/OPERATIONS.md](docs/OPERATIONS.md): environments, migrations to production, backups, the restore
   drill, and what to do when something breaks.
-- [docs/SECURITY.md](docs/SECURITY.md): the secrets boundary, keys, headers and the RLS audit.
+- [docs/SECURITY.md](docs/SECURITY.md): the secrets boundary, the Accounts vault and its limits, keys, headers and the RLS audit.
